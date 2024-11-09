@@ -1,0 +1,136 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPERADMIN 
+  ADMIN 
+  AUTHOR 
+  EDITOR 
+  READER 
+}
+
+model User {
+  id                    String            @id @default(cuid())
+  username              String            @unique
+  email                 String            @unique
+  passwordHash          String            @map("password_hash")
+  role                  UserRole          @default(AUTHOR)
+  profileImage          String            @map("profile_image")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+  deletedAt             DateTime?         @map("deleted_at") // Null if active, new Date if deleted (soft delete)
+
+  blogs                 Blog[]
+  categories            Category[]
+  comments              Comment[]
+
+  @@map("user")
+}
+
+enum BlogStatus {
+  DRAFT
+  SCHEDULE
+  PENDING
+  APPROVED
+  PUBLISH
+  ARCHIVE 
+}
+
+model Blog {
+  id                      String             @id @default(cuid())
+  title                   String             @db.VarChar(255)
+  content                 String             @db.Text
+  status                  BlogStatus         @default(DRAFT)
+  viewCount               Int                @default(0) @map("view_count")
+  likeCount               Int                @default(0) @map("like_count")
+  allowComment            Boolean            @map("allow_comment")
+  schedulePulblishedAt    DateTime?          @map("schedule_published_at")
+  publishedAt             DateTime?          @map("published_at")
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("edited_at")
+  deletedAt               DateTime?          @map("deleted_at")
+  mainImageId             String?            @map("main_image_id")
+  userId                  String             @map("user_id")
+  categoryId              String             @map("category_id")
+  isUserActive            Boolean?           @default(true) @map("is_user_active")
+
+  category                Category           @relation(fields: [categoryId], references: [id])
+  mainImage               Media?             @relation("BlogMainImage", fields: [mainImageId], references: [id])
+  user                    User               @relation(fields: [userId], references: [id])
+
+  comments                Comment[]
+  contentMedia            Media[]            @relation("BlogContentMedia")
+  tags                    Tag[]              @relation("BlogToTag")
+
+  @@index([categoryId], map: "blog_category_id_fkey")
+  @@index([mainImageId], map: "blog_main_image_id_fkey")
+  @@index([userId], map: "blog_user_id_fkey")
+
+  @@map("blog")
+}
+
+model Category {
+  id                      String             @id @default(cuid())
+  name                    String             @db.VarChar(255)
+  description             String             @db.VarChar(255)
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+  deleteAt                DateTime?          @map("delete_at")
+  userId                  String             @map("user_id")
+  isUserActive            Boolean?           @default(true) @map("is_user_active")
+
+  Blogs                   Blog[]
+  user                    User               @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "categories_user_id_fkey")
+
+  @@map("categories")
+}
+
+model Comment {
+  id                      String             @id @default(cuid())
+  comment                 String             @db.Text
+  createdAt               DateTime           @default(now()) @map("created_at")
+  updatedAt               DateTime           @updatedAt @map("updated_at")
+  userId                  String             @map("user_id")
+  blogId                  String             @map("blog_id")
+  isUserActive            Boolean?           @default(true) @map("is_user_active")
+
+  blog                    Blog               @relation(fields: [blogId], references: [id])
+  user                    User               @relation(fields: [userId], references: [id])
+
+  @@index([blogId], map: "comment_blog_id_fkey")
+  @@index([userId], map: "comment_user_id_fkey")
+
+  @@map("comment")
+}
+
+model Tag {
+  id                      String             @id @default(cuid())
+  tagname                 String             @unique
+  createdAt               DateTime           @default(now()) @map("created_at")
+
+  blog                    Blog[]             @relation("BlogToTag")
+
+  @@map("tag")
+}
+
+model Media {
+  id                      String             @id @default(cuid())
+  filename                String
+  filepath                String
+  filesize                Int
+  createdAt               DateTime           @default(now()) @map("created_at")
+
+  mainImageBlogs          Blog[]             @relation("BlogMainImage")
+  contentBlogs            Blog[]             @relation("BlogContentMedia")
+
+  @@map("media")
+}
