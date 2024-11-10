@@ -16,10 +16,29 @@ const prisma = new PrismaClient();
 // deletedAt             DateTime?         @map("deleted_at") // Null if active, date if deleted (soft delete)
 
 // CREATE
-const createNewUser = async (req: Request, res: Response) => {
+const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
-    const { username, email, password, role, profileImage } = req.body;
+    const { username, email, password, role, profileImage, userId } = req.body;
+
+    // USER VALIDATION
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (user?.deletedAt !== null) {
+      return res
+        .status(403)
+        .json({ message: "User is inactive and cannot create a new user" });
+    }
+    if (user?.role !== "SUPERADMIN" && user?.role !== "ADMIN") {
+      return res.status(403).json({
+        message:
+          "Only 'SUPERADMIN' and 'ADMIN' has permission to create a new user",
+      });
+    }
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
@@ -37,15 +56,19 @@ const createNewUser = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json({ data: result, message: "Create a user success!" });
+    return res
+      .status(201)
+      .json({ data: result, message: "Create a user success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error creating user", error });
+    return res.status(500).json({ message: "Error creating user", error });
   }
 };
 
 // READ
-const getAllUsers = async (req: Request, res: Response) => {
+const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   try {
+    const { userId } = req.body;
+
     // DATABASE CONNECTION WITH SCHEMA
     const result = await prisma.user.findMany({
       select: {

@@ -85,6 +85,8 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
 
 // READ
 const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
+  console.log(req.user);
+
   try {
     const result = await prisma.blog.findMany({
       select: {

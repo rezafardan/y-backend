@@ -19,6 +19,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       select: {
         id: true,
         username: true,
+        role: true,
         passwordHash: true,
         deletedAt: true,
       },
@@ -46,10 +47,10 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     }
 
     const token = jwt.sign(
-      { id: result.id, username: result.username },
+      { id: result.id, username: result.username, role: result.role },
       jwtSecret!,
       {
-        expiresIn: "1h",
+        expiresIn: "1H",
       }
     );
 
@@ -63,7 +64,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
 
     return res
       .status(200)
-      .json({ message: "Login success", userId: result.id });
+      .json({ message: "Login success", userId: result.id, role: result.role });
   } catch (error) {
     return res
       .status(500)

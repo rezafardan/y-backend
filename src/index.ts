@@ -2,11 +2,11 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import logRequest from "./middlewares/logs";
+import accessValidation from "./middlewares/accessValidation";
 import authRoutes from "./routes/auth";
 import blogRoutes from "./routes/blog";
 import userRoutes from "./routes/user";
 import categoryRoutes from "./routes/category";
-import accessValidation from "./middlewares/accessValidation";
 
 const app = express();
 const PORT = 3001;
