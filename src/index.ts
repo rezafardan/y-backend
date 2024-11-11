@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import logRequest from "./middlewares/logs";
-import accessValidation from "./middlewares/accessValidation";
-import authRoutes from "./routes/auth";
-import blogRoutes from "./routes/blog";
-import userRoutes from "./routes/user";
-import categoryRoutes from "./routes/category";
+import logRequest from "./middleware/logs.middleware";
+import accessValidation from "./middleware/accessValidation.midlleware";
+import authRoutes from "./routes/auth.routes";
+import blogRoutes from "./routes/blog.routes";
+import userRoutes from "./routes/user.routes";
+import categoryRoutes from "./routes/category.routes";
 
 const app = express();
 const PORT = 3001;
@@ -24,16 +24,16 @@ app.use(express.json());
 app.use(logRequest);
 
 // ROUTE LOGIN
-app.use("/login", authRoutes);
+app.use("/api/login", authRoutes);
 
 // ROUTE USER
-app.use("/user", accessValidation, userRoutes);
+app.use("/api/user", accessValidation, userRoutes);
 
 // ROUTE BLOG
-app.use("/blog", accessValidation, blogRoutes);
+app.use("/api/blog", accessValidation, blogRoutes);
 
 // ROUTE CATEGORY
-app.use("/category", accessValidation, categoryRoutes);
+app.use("/api/category", accessValidation, categoryRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running in PORT: ${PORT}`);

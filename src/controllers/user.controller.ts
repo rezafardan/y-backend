@@ -1,6 +1,6 @@
-import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -19,26 +19,7 @@ const prisma = new PrismaClient();
 const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
-    const { username, email, password, role, profileImage, userId } = req.body;
-
-    // USER VALIDATION
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (user?.deletedAt !== null) {
-      return res
-        .status(403)
-        .json({ message: "User is inactive and cannot create a new user" });
-    }
-    if (user?.role !== "SUPERADMIN" && user?.role !== "ADMIN") {
-      return res.status(403).json({
-        message:
-          "Only 'SUPERADMIN' and 'ADMIN' has permission to create a new user",
-      });
-    }
+    const { username, email, password, role, profileImage } = req.body;
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
@@ -58,7 +39,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
 
     return res
       .status(201)
-      .json({ data: result, message: "Create a user success!" });
+      .json({ data: result, message: "Create a user success" });
   } catch (error) {
     return res.status(500).json({ message: "Error creating user", error });
   }
@@ -67,8 +48,6 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
 // READ
 const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { userId } = req.body;
-
     // DATABASE CONNECTION WITH SCHEMA
     const result = await prisma.user.findMany({
       select: {
@@ -86,7 +65,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
 
     res.status(200).json({ data: result, messsage: "Get all users success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error when fetching users data", error });
+    res.status(500).json({ message: "Error when get users data", error });
   }
 };
 
@@ -126,7 +105,7 @@ const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     // GET BODY
-    const { username, email, passwordHash, role, profileImage } = req.body;
+    const { username, email, role, profileImage } = req.body;
 
     // DATABASE CONNECTION WITH SCHEMA
     const result = await prisma.user.update({
@@ -183,7 +162,6 @@ const softDeleteUser = async (req: Request, res: Response) => {
 };
 
 // RESTORE USER
-
 const restoreUserSoftDelete = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -235,6 +213,26 @@ const deleteUserPermanent = async (req: Request, res: Response) => {
   }
 };
 
+const checkUsername = async (req: Request, res: Response): Promise<any> => {
+  try {
+    // GET BODY
+    const { username } = req.body;
+
+    // DATABASE CONNECTION WITH SCHEMA
+    const result = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (result) {
+      return res.status(200).json({ isAvailable: false });
+    }
+
+    return res.status(200).json({ isAvailable: true });
+  } catch (error) {
+    return res.status(500).json({ isAvailable: false });
+  }
+};
+
 export default {
   createNewUser,
   getAllUsers,
@@ -243,4 +241,5 @@ export default {
   softDeleteUser,
   deleteUserPermanent,
   restoreUserSoftDelete,
+  checkUsername,
 };

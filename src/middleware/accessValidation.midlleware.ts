@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
 // MIDDLEWARE TO AUTHENTICATION ACCESS VALIDATION BY TOKEN
 // IF USER CREATE A REQUEST WITHOUT TOKEN, REQUEST CAN BE DROP OR REJECT
 const accessValidation = (req: Request, res: Response, next: NextFunction) => {
+  // GET HTTP COOKIES
   const token = req.cookies?.token;
 
   if (!token) {

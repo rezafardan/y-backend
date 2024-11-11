@@ -17,17 +17,11 @@ const prisma = new PrismaClient();
 const createNewCategory = async (req: Request, res: Response) => {
   try {
     // GET BODY
-    const { name, description, userId } = req.body;
-
-    // USER VALIDATION
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!user || user?.deletedAt !== null || user.role !== "AUTHOR") {
-      res
-        .status(403)
-        .json({ message: "You are not authorized to create a category." });
-    }
+    const { name, description } = req.body;
+    const user = req.user as {
+      id: string;
+    };
+    const userId = user.id;
 
     // DATABASE CONNECTION
     const result = await prisma.category.create({
