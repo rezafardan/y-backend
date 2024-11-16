@@ -66,7 +66,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     );
 
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
-    res.cookie("token", token, {
+    res.cookie("authToken", token, {
       httpOnly: true,
       // secure: process.env.NODE_ENV === "production", // Only on HTTPS production
       // secure: true, // Cookies only send in HTTPS production
@@ -74,14 +74,12 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       maxAge: 3600000,
     });
 
-    return res
-      .status(200)
-      .json({
-        message: "Login success",
-        userId: result.id,
-        role: result.role,
-        deletedAt: result.deletedAt,
-      });
+    return res.status(200).json({
+      message: `Login success, Welcome ${result.username}`,
+      userId: result.id,
+      role: result.role,
+      deletedAt: result.deletedAt,
+    });
   } catch (error) {
     return res
       .status(500)
@@ -89,4 +87,18 @@ const Login = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { Login };
+const Logout = async (req: Request, res: Response): Promise<any> => {
+  try {
+    res.clearCookie("authToken", {
+      httpOnly: true,
+      sameSite: "strict",
+      // secure: process.env.NODE_ENV === "production", // Uncomment for production
+    });
+
+    return res.status(200).json({ message: "Logout successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error during logout", error });
+  }
+};
+
+export default { Login, Logout };

@@ -5,50 +5,54 @@ import userController from "../controllers/user.controller";
 const router = express.Router();
 
 // CREATE
-router.post("/", authorizeRole(["SUPERADMIN"]), userController.createNewUser);
+router.post(
+  "/",
+  authorizeRole(["ADMINISTRATOR"]),
+  userController.createNewUser
+);
 
 // READ
-router.get(
-  "/",
-  authorizeRole(["SUPERADMIN", "ADMIN"]),
-  userController.getAllUsers
-);
+router.get("/", authorizeRole(["ADMINISTRATOR"]), userController.getAllUsers);
 
 // READ BY ID
 router.get(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN"]),
+  authorizeRole(["ADMINISTRATOR"]),
   userController.getUserById
 );
 
 // UPDATE
-router.patch("/:id", authorizeRole(["SUPERADMIN"]), userController.updateUser);
+router.patch(
+  "/:id",
+  authorizeRole(["ADMINISTRATOR"]),
+  userController.updateUser
+);
 
 // SOFT DELETE
 router.patch(
   "/softdelete/:id",
-  authorizeRole(["SUPERADMIN"]),
+  authorizeRole(["ADMINISTRATOR"]),
   userController.softDeleteUser
 );
 
 // RESTORE USER SOFT DELETE
 router.patch(
   "/restore/:id",
-  authorizeRole(["SUPERADMIN"]),
+  authorizeRole(["ADMINISTRATOR"]),
   userController.restoreUserSoftDelete
 );
 
 // PERMANENT DELETE
 router.delete(
   "/:id",
-  authorizeRole(["SUPERADMIN"]),
+  authorizeRole(["ADMINISTRATOR"]),
   userController.deleteUserPermanent
 );
 
 // CHECK USERNAME
 router.post(
   "/check-username",
-  authorizeRole(["SUPERADMIN"]),
+  authorizeRole(["ADMINISTRATOR"]),
   userController.checkUsername
 );
 

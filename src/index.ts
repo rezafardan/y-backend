@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes";
 import blogRoutes from "./routes/blog.routes";
 import userRoutes from "./routes/user.routes";
 import categoryRoutes from "./routes/category.routes";
+import administratorRoutes from "./routes/administrator.routes";
 
 const app = express();
 const PORT = 3001;
@@ -24,7 +25,7 @@ app.use(express.json());
 app.use(logRequest);
 
 // ROUTE LOGIN
-app.use("/api/login", authRoutes);
+app.use("/api/", authRoutes);
 
 // ROUTE USER
 app.use("/api/user", accessValidation, userRoutes);
@@ -34,6 +35,10 @@ app.use("/api/blog", accessValidation, blogRoutes);
 
 // ROUTE CATEGORY
 app.use("/api/category", accessValidation, categoryRoutes);
+
+// CREATE ADMINISTRATOR USER
+// COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
+app.use("/api/administrator", administratorRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running in PORT: ${PORT}`);

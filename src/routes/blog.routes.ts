@@ -7,42 +7,42 @@ const router = express.Router();
 // CREATE
 router.post(
   "/",
-  authorizeRole(["SUPERADMIN", "ADMIN", "AUTHOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   blogController.createNewBlog
 );
 
 // READ
 router.get(
   "/",
-  authorizeRole(["SUPERADMIN", "ADMIN", "AUTHOR", "EDITOR", "READER"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   blogController.getAllBlogs
 );
 
 // READ BY ID
 router.get(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN", "AUTHOR", "EDITOR", "READER"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   blogController.getBlogById
 );
 
 // APPROVE
 router.patch(
   "/:id/approve",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   blogController.updateBlog
 );
 
 // PUBLISH
 router.patch(
   "/:id/publish",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   blogController.updateBlog
 );
 
 // DELETE
 router.delete(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   blogController.deleteBlog
 );
 

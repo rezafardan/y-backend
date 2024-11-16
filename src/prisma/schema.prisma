@@ -9,11 +9,10 @@ datasource db {
 }
 
 enum UserRole {
-  SUPERADMIN 
-  ADMIN 
+  ADMINISTRATOR  
   AUTHOR 
   EDITOR 
-  READER 
+  SUBSCRIBER 
 }
 
 model User {
@@ -36,11 +35,11 @@ model User {
 
 enum BlogStatus {
   DRAFT
-  SCHEDULE
   PENDING
-  APPROVED
+  REJECT
   PUBLISH
-  ARCHIVE 
+  SCHEDULE
+  
 }
 
 model Blog {

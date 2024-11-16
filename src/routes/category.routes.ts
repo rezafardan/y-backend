@@ -7,35 +7,35 @@ const router = express.Router();
 // CREATE
 router.post(
   "/",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   categoryController.createNewCategory
 );
 
 // READ
 router.get(
   "/",
-  authorizeRole(["SUPERADMIN", "ADMIN", "AUTHOR", "EDITOR", "READER"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   categoryController.getAllCategories
 );
 
 // READ BY ID
 router.get(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN", "AUTHOR", "EDITOR", "READER"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   categoryController.getCategoryByID
 );
 
 // UPDATE
 router.patch(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   categoryController.updateCategory
 );
 
 // DELETE
 router.delete(
   "/:id",
-  authorizeRole(["SUPERADMIN", "ADMIN", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   categoryController.deleteCategory
 );
 

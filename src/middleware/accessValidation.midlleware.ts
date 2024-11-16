@@ -6,7 +6,7 @@ import { UserRole } from "@prisma/client";
 // IF USER CREATE A REQUEST WITHOUT TOKEN, REQUEST CAN BE DROP OR REJECT
 const accessValidation = (req: Request, res: Response, next: NextFunction) => {
   // GET HTTP COOKIES
-  const token = req.cookies?.token;
+  const token = req.cookies?.authToken;
 
   if (!token) {
     res.status(403).json({ message: "Authentication token is missing" });

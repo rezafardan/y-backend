@@ -49,11 +49,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
         .status(403)
         .json({ message: "User is inactive and cannot create blogs" });
     }
-    if (
-      user?.role !== "SUPERADMIN" &&
-      user?.role !== "ADMIN" &&
-      user?.role !== "AUTHOR"
-    ) {
+    if (user?.role !== "ADMINISTRATOR" && user?.role !== "AUTHOR") {
       return res
         .status(403)
         .json({ message: "You do not have permission to create a blog" });
