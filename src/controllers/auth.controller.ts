@@ -25,6 +25,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
         username: true,
         role: true,
         passwordHash: true,
+        profileImage: true,
         deletedAt: true,
       },
     });
@@ -69,16 +70,19 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     res.cookie("authToken", token, {
       httpOnly: true,
       // secure: process.env.NODE_ENV === "production", // Only on HTTPS production
-      // secure: true, // Cookies only send in HTTPS production
+      secure: true, // Cookies only send in HTTPS production
       sameSite: "strict",
       maxAge: 3600000,
     });
 
     return res.status(200).json({
       message: `Login success, Welcome ${result.username}`,
-      userId: result.id,
-      role: result.role,
-      deletedAt: result.deletedAt,
+      user: {
+        userId: result.id,
+        role: result.role,
+        profileImage: result.profileImage,
+        deletedAt: result.deletedAt,
+      },
     });
   } catch (error) {
     return res
@@ -91,8 +95,9 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
   try {
     res.clearCookie("authToken", {
       httpOnly: true,
-      sameSite: "strict",
+      secure: true,
       // secure: process.env.NODE_ENV === "production", // Uncomment for production
+      sameSite: "strict",
     });
 
     return res.status(200).json({ message: "Logout successfully" });

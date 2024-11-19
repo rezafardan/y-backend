@@ -1,5 +1,5 @@
 import express from "express";
-import { authorizeRole } from "../middleware/roleAuthorization";
+import { authorizeRole } from "../middleware/roleAuthorization.middleware";
 import categoryController from "../controllers/category.controller";
 
 const router = express.Router();

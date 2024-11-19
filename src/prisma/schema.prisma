@@ -21,7 +21,7 @@ model User {
   email                 String            @unique
   passwordHash          String            @map("password_hash")
   role                  UserRole          @default(AUTHOR)
-  profileImage          String            @map("profile_image")
+  profileImage          String?           @map("profile_image")
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
   deletedAt             DateTime?         @map("deleted_at") // Null if active, new Date if deleted (soft delete)

@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 import cookieParser from "cookie-parser";
 import logRequest from "./middleware/logs.middleware";
 import accessValidation from "./middleware/accessValidation.midlleware";
@@ -11,6 +12,8 @@ import administratorRoutes from "./routes/administrator.routes";
 
 const app = express();
 const PORT = 3001;
+
+app.use("/public", express.static(path.join(__dirname, "public")));
 
 // MIDDLEWARE CROSS ORIGIN
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
