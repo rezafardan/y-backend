@@ -13,8 +13,6 @@ import administratorRoutes from "./routes/administrator.routes";
 const app = express();
 const PORT = 3001;
 
-app.use("/public", express.static(path.join(__dirname, "public")));
-
 // MIDDLEWARE CROSS ORIGIN
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
@@ -26,6 +24,9 @@ app.use(express.json());
 
 // MIDDLEWARE LOG
 app.use(logRequest);
+
+// MIDDLEWARE ACCESS DATA FILE
+app.use("/public", accessValidation, express.static(path.resolve("public")));
 
 // ROUTE LOGIN
 app.use("/api/", authRoutes);

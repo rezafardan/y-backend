@@ -63,7 +63,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
-    res.status(200).json({ messsage: "Get all users success!", user: result });
+    res.status(200).json({ data: result, messsage: "Get all users success!" });
   } catch (error) {
     res.status(500).json({ message: "Error when get users data", error });
   }
@@ -82,7 +82,6 @@ const getUserById = async (req: Request, res: Response) => {
         id: true,
         username: true,
         email: true,
-        passwordHash: true,
         role: true,
         profileImage: true,
         createdAt: true,

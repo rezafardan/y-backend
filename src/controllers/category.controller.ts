@@ -51,10 +51,17 @@ const getAllCategories = async (req: Request, res: Response) => {
         id: true,
         name: true,
         description: true,
-        user: true,
         createdAt: true,
         updatedAt: true,
         isUserActive: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            deletedAt: true,
+          },
+        },
       },
     });
 
@@ -81,10 +88,17 @@ const getCategoryByID = async (req: Request, res: Response) => {
         id: true,
         name: true,
         description: true,
-        user: true,
         createdAt: true,
         updatedAt: true,
         isUserActive: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            deletedAt: true,
+          },
+        },
       },
     });
     res

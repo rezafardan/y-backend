@@ -30,6 +30,10 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
+    if (!result) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
     // PASSWORD VALIDATION
     if (!result || !result.passwordHash) {
       return res.status(401).json({ message: "Invalid username or password" });
