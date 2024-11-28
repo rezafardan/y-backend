@@ -28,46 +28,44 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     const {
       title,
       content,
-      mainImageId,
       status,
       allowComment,
       publishedAt,
       tags,
-      userId,
       categoryId,
     } = req.body;
 
-    // USER VALIDATION
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const bannerImage = req.file;
+    const user = req.user as {
+      id: string;
+    };
+    const userId = user.id;
+
+    if (!bannerImage) {
+      return res.json({ message: "Banner Image Wajib" });
+    }
+    const media = await prisma.media.create({
+      data: {
+        filename: bannerImage?.originalname,
+        filepath: bannerImage?.path,
+        filesize: bannerImage?.size,
+        createdAt: new Date(),
+      },
     });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    if (user?.deletedAt !== null) {
-      return res
-        .status(403)
-        .json({ message: "User is inactive and cannot create blogs" });
-    }
-    if (user?.role !== "ADMINISTRATOR" && user?.role !== "AUTHOR") {
-      return res
-        .status(403)
-        .json({ message: "You do not have permission to create a blog" });
-    }
 
     // DATABASE CONNECTION
     const result = await prisma.blog.create({
       data: {
         title,
         content,
-        mainImageId: null,
+        mainImageId: media.id,
         userId,
         categoryId,
         publishedAt: publishedAt ? publishedAt : null,
         deletedAt: null,
         status: status as BlogStatus,
         tags,
-        allowComment,
+        allowComment: true,
       },
     });
 
@@ -75,6 +73,8 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Create a blog success!" });
   } catch (error) {
+    console.log(req);
+    console.error(error);
     return res.status(500).json({ message: "Error creating blog", error });
   }
 };

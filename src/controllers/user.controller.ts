@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import fs from "fs";
 
 const prisma = new PrismaClient();
 
@@ -194,10 +195,35 @@ const restoreUserSoftDelete = async (req: Request, res: Response) => {
 };
 
 // DELETE PERMANENT
-const deleteUserPermanent = async (req: Request, res: Response) => {
+const deleteUserPermanent = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     // GET ID
     const { id } = req.params;
+
+    // GET PROFILE IMAGE
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { profileImage: true },
+    });
+
+    // IF ID NOT FOUND RETURN ERROR
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // DELETE PROFILE IMAGE IF THERE ARE PROFILE IMAGE IN DATABASE
+    if (user.profileImage) {
+      try {
+        await fs.promises.unlink(user.profileImage);
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: "Error deleting profile image", error });
+      }
+    }
 
     // DATABASE CONNECTION WITH SCHEMA
     const result = await prisma.user.delete({

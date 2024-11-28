@@ -35,11 +35,7 @@ model User {
 
 enum BlogStatus {
   DRAFT
-  PENDING
-  REJECT
-  PUBLISH
-  SCHEDULE
-  
+  SEND
 }
 
 model Blog {

@@ -1,7 +1,7 @@
 import express from "express";
 import { authorizeRole } from "../middleware/roleAuthorization.middleware";
 import userController from "../controllers/user.controller";
-import { upload } from "../middleware/upload.middleware";
+import { uploadProfile } from "../middleware/upload.middleware";
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR"]),
-  upload.single("profileImage"),
+  uploadProfile.single("profileImage"),
   userController.createNewUser
 );
 

@@ -1,6 +1,7 @@
 import express from "express";
 import { authorizeRole } from "../middleware/roleAuthorization.middleware";
 import blogController from "../controllers/blog.controller";
+import { uploadBlog } from "../middleware/upload.middleware";
 
 const router = express.Router();
 
@@ -8,6 +9,7 @@ const router = express.Router();
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR", "EDITOR"]),
+  uploadBlog.single("mainImageId"),
   blogController.createNewBlog
 );
 
