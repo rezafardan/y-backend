@@ -9,6 +9,7 @@ import blogRoutes from "./routes/blog.routes";
 import userRoutes from "./routes/user.routes";
 import categoryRoutes from "./routes/category.routes";
 import administratorRoutes from "./routes/administrator.routes";
+import tagRoutes from "./routes/tag.routes";
 
 const app = express();
 const PORT = 3001;
@@ -39,6 +40,9 @@ app.use("/api/blog", accessValidation, blogRoutes);
 
 // ROUTE CATEGORY
 app.use("/api/category", accessValidation, categoryRoutes);
+
+// ROUTE TAG
+app.use("/api/tag", accessValidation, tagRoutes);
 
 // CREATE ADMINISTRATOR USER
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED

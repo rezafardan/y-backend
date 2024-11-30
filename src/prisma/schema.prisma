@@ -109,7 +109,7 @@ model Comment {
 
 model Tag {
   id                      String             @id @default(cuid())
-  tagname                 String             @unique
+  name                    String             @unique
   createdAt               DateTime           @default(now()) @map("created_at")
 
   blog                    Blog[]             @relation("BlogToTag")

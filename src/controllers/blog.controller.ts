@@ -35,6 +35,25 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       categoryId,
     } = req.body;
 
+    let allowCommentBoolean: boolean;
+    if (typeof allowComment === "string") {
+      if (allowComment.toLowerCase() === "true") {
+        allowCommentBoolean = true;
+      } else if (allowComment.toLowerCase() === "false") {
+        allowCommentBoolean = false;
+      } else {
+        return res.status(400).json({
+          message: "Invalid allowComment value. Must be 'true' or 'false'.",
+        });
+      }
+    } else if (typeof allowComment === "boolean") {
+      allowCommentBoolean = allowComment;
+    } else {
+      return res.status(400).json({
+        message: "allowComment must be a boolean or string ('true'/'false').",
+      });
+    }
+
     const bannerImage = req.file;
     const user = req.user as {
       id: string;
@@ -42,7 +61,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     const userId = user.id;
 
     if (!bannerImage) {
-      return res.json({ message: "Banner Image Wajib" });
+      return res.json({ message: "Main Image is Required" });
     }
     const media = await prisma.media.create({
       data: {
@@ -53,6 +72,55 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       },
     });
 
+    let parsedTags: any[] = [];
+    if (typeof tags === "string") {
+      try {
+        parsedTags = JSON.parse(tags); // Parse the stringified JSON
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid tags format." });
+      }
+    } else if (Array.isArray(tags)) {
+      parsedTags = tags; // Tags are already an array
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Tags must be an array or string." });
+    }
+
+    const processedTags = await Promise.all(
+      parsedTags.map(async (tag: any) => {
+        try {
+          if (tag.id && tag.id !== "") {
+            console.log("Tag tidak lengkap:", tag);
+            // Jika tag sudah ada (id tidak kosong), cek di database
+            const existingTag = await prisma.tag.findUnique({
+              where: { id: tag.id },
+            });
+            if (existingTag) {
+              return existingTag; // Menggunakan tag yang sudah ada
+            } else {
+              throw new Error(`Tag with id ${tag.id} not found`);
+            }
+          } else {
+            // Jika id kosong, buat tag baru
+            const newTag = await prisma.tag.create({
+              data: {
+                name: tag.name,
+              },
+            });
+            return newTag; // Mengembalikan tag yang baru dibuat
+          }
+        } catch (error: any) {
+          console.error(`Error processing tag: ${error.message}`);
+          throw new Error(`Failed to process tag: ${tag.name}`);
+        }
+      })
+    );
+
+    // Filter tag yang berhasil diproses (menghindari null atau undefined)
+    const validTags = processedTags.filter(
+      (tag) => tag !== null && tag !== undefined
+    );
     // DATABASE CONNECTION
     const result = await prisma.blog.create({
       data: {
@@ -64,8 +132,13 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
         publishedAt: publishedAt ? publishedAt : null,
         deletedAt: null,
         status: status as BlogStatus,
-        tags,
-        allowComment: true,
+        tags: {
+          connect: validTags.map((tag) => ({ id: tag.id })),
+        },
+        allowComment: allowCommentBoolean,
+      },
+      include: {
+        tags: true,
       },
     });
 
@@ -73,7 +146,6 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Create a blog success!" });
   } catch (error) {
-    console.log(req);
     console.error(error);
     return res.status(500).json({ message: "Error creating blog", error });
   }
