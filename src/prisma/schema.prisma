@@ -41,7 +41,7 @@ enum BlogStatus {
 model Blog {
   id                      String             @id @default(cuid())
   title                   String             @db.VarChar(255)
-  content                 String             @db.Text
+  content                 Json             
   status                  BlogStatus         @default(DRAFT)
   viewCount               Int                @default(0) @map("view_count")
   likeCount               Int                @default(0) @map("like_count")

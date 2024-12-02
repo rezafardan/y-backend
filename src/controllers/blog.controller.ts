@@ -35,6 +35,18 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       categoryId,
     } = req.body;
 
+    // Parsing content string menjadi objek JSON
+    let parsedContent: any;
+    if (typeof content === "string") {
+      try {
+        parsedContent = JSON.parse(content); // Parse the stringified JSON
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid content format." });
+      }
+    } else {
+      parsedContent = content; // Jika sudah dalam bentuk objek JSON
+    }
+
     let allowCommentBoolean: boolean;
     if (typeof allowComment === "string") {
       if (allowComment.toLowerCase() === "true") {
@@ -125,7 +137,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     const result = await prisma.blog.create({
       data: {
         title,
-        content,
+        content: parsedContent,
         mainImageId: media.id,
         userId,
         categoryId,
@@ -171,7 +183,13 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
         isUserActive: true,
         tags: true,
         category: true,
-        user: true,
+        user: {
+          select: {
+            username: true,
+            role: true,
+            deletedAt: true,
+          },
+        },
       },
     });
 
@@ -179,7 +197,7 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
 
     return res
       .status(200)
-      .json({ data: result, message: "Get all blogs success!", user: user });
+      .json({ data: result, message: "Get all blogs success!" });
   } catch (error) {
     return res
       .status(500)
@@ -209,7 +227,13 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
         isUserActive: true,
         tags: true,
         category: true,
-        user: true,
+        user: {
+          select: {
+            username: true,
+            role: true,
+            deletedAt: true,
+          },
+        },
       },
     });
     return res
