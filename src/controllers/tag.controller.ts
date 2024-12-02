@@ -6,10 +6,15 @@ const prisma = new PrismaClient();
 const createNewTag = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
+    const user = req.user as {
+      id: string;
+    };
+    const userId = user.id;
 
     const result = await prisma.tag.create({
       data: {
         name,
+        userId,
       },
     });
 
@@ -27,6 +32,11 @@ const getAllTags = async (req: Request, res: Response) => {
         id: true,
         name: true,
         createdAt: true,
+        user: {
+          select: {
+            username: true,
+          },
+        },
       },
     });
     res.status(200).json({ data: result, message: "Get all tags success!" });

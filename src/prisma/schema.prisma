@@ -29,8 +29,11 @@ model User {
   blogs                 Blog[]
   categories            Category[]
   comments              Comment[]
+  tags                  Tag[]
+  medias                Media[]
 
   @@map("user")
+  
 }
 
 enum BlogStatus {
@@ -111,9 +114,12 @@ model Tag {
   id                      String             @id @default(cuid())
   name                    String             @unique
   createdAt               DateTime           @default(now()) @map("created_at")
+  userId                  String             @map("user_id")
 
   blog                    Blog[]             @relation("BlogToTag")
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId], map: "tag_user_id_fkey")
   @@map("tag")
 }
 
@@ -123,9 +129,12 @@ model Media {
   filepath                String
   filesize                Int
   createdAt               DateTime           @default(now()) @map("created_at")
+  userId                  String             @map("user_id")
 
   mainImageBlogs          Blog[]             @relation("BlogMainImage")
   contentBlogs            Blog[]             @relation("BlogContentMedia")
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId], map: "media_user_id_fkey")
   @@map("media")
 }

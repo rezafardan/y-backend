@@ -81,6 +81,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
         filepath: bannerImage?.path,
         filesize: bannerImage?.size,
         createdAt: new Date(),
+        userId,
       },
     });
 
@@ -118,6 +119,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
             const newTag = await prisma.tag.create({
               data: {
                 name: tag.name,
+                userId,
               },
             });
             return newTag; // Mengembalikan tag yang baru dibuat
