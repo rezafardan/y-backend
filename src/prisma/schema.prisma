@@ -18,6 +18,7 @@ enum UserRole {
 model User {
   id                    String            @id @default(cuid())
   username              String            @unique
+  fullname              String            
   email                 String            @unique
   passwordHash          String            @map("password_hash")
   role                  UserRole          @default(AUTHOR)
@@ -38,7 +39,8 @@ model User {
 
 enum BlogStatus {
   DRAFT
-  SEND
+  PUBLISH
+  SCHEDULE
 }
 
 model Blog {
@@ -49,7 +51,6 @@ model Blog {
   viewCount               Int                @default(0) @map("view_count")
   likeCount               Int                @default(0) @map("like_count")
   allowComment            Boolean            @map("allow_comment")
-  schedulePulblishedAt    DateTime?          @map("schedule_published_at")
   publishedAt             DateTime?          @map("published_at")
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("edited_at")
@@ -129,6 +130,7 @@ model Media {
   filepath                String
   filesize                Int
   createdAt               DateTime           @default(now()) @map("created_at")
+  isUsed                  Boolean            @default(false)
   userId                  String             @map("user_id")
 
   mainImageBlogs          Blog[]             @relation("BlogMainImage")

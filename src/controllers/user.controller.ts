@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prisma/prisma";
 import bcrypt from "bcrypt";
 import fs from "fs";
-
-const prisma = new PrismaClient();
 
 // === USER SCHEMA ===
 // id                    String            @id @default(cuid())
@@ -20,7 +18,7 @@ const prisma = new PrismaClient();
 const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
-    const { username, email, password, role } = req.body;
+    const { username, fullname, email, password, role } = req.body;
     const profileImage = req.file;
 
     // HASHING PASSWORD
@@ -31,6 +29,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     const result = await prisma.user.create({
       data: {
         username,
+        fullname,
         email,
         passwordHash,
         role,

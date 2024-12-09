@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prisma/prisma";
 import bcrypt from "bcrypt";
-
-const prisma = new PrismaClient();
 
 // CREATE ADMINISTRATOR USER
 const createAdministrator = async (
@@ -11,7 +9,7 @@ const createAdministrator = async (
 ): Promise<any> => {
   try {
     // GET BODY
-    const { username, email, password, profileImage } = req.body;
+    const { username, fullname, email, password, profileImage } = req.body;
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
@@ -21,6 +19,7 @@ const createAdministrator = async (
     const result = await prisma.user.create({
       data: {
         username,
+        fullname,
         email,
         passwordHash,
         role: "ADMINISTRATOR",

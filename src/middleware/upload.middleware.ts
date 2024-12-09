@@ -24,3 +24,7 @@ export const uploadProfile = multer({
 export const uploadBlog = multer({
   storage: createStorage("blog"),
 });
+
+export const uploadContent = multer({
+  storage: createStorage("blog/content"),
+});

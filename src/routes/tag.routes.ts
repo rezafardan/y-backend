@@ -6,14 +6,20 @@ const router = express.Router();
 
 router.post(
   "/",
-  authorizeRole(["ADMINISTRATOR", "AUTHOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
   tagController.createNewTag
 );
 
 router.get(
   "/",
-  authorizeRole(["ADMINISTRATOR", "AUTHOR", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "AUTHOR", "EDITOR", "SUBSCRIBER"]),
   tagController.getAllTags
+);
+
+router.delete(
+  "/:id",
+  authorizeRole(["ADMINISTRATOR", "AUTHOR", "EDITOR"]),
+  tagController.deleteTag
 );
 
 export default router;

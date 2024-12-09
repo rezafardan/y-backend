@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
+import prisma from "../prisma/prisma";
 
 const Login = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -72,20 +70,19 @@ const Login = async (req: Request, res: Response): Promise<any> => {
 
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
     res.cookie("authToken", token, {
-      httpOnly: true,
+      httpOnly: false,
       // secure: process.env.NODE_ENV === "production", // Only on HTTPS production
-      secure: true, // Cookies only send in HTTPS production
-      sameSite: "strict",
+      secure: false, // Cookies only send in HTTPS production
+      sameSite: "none",
       maxAge: 3600000,
     });
 
     return res.status(200).json({
       message: `Login success, Welcome ${result.username}`,
       user: {
-        userId: result.id,
+        username: result.username,
         role: result.role,
         profileImage: result.profileImage,
-        deletedAt: result.deletedAt,
       },
     });
   } catch (error) {
@@ -103,6 +100,7 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
       // secure: process.env.NODE_ENV === "production", // Uncomment for production
       sameSite: "strict",
     });
+    res.clearCookie("userData");
 
     return res.status(200).json({ message: "Logout successfully" });
   } catch (error) {
@@ -110,4 +108,40 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { Login, Logout };
+const ResetPassword = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { username, newPassword } = req.body;
+
+    // Validasi input
+    if (!username || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "Username and new password are required" });
+    }
+
+    // Cari pengguna berdasarkan username
+    const user = await prisma.user.findUnique({ where: { username } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Hash password baru
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update password di database
+    await prisma.user.update({
+      where: { username },
+      data: { passwordHash },
+    });
+
+    return res
+      .status(200)
+      .json({ message: "Password has been updated successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error when trying to reset password", error });
+  }
+};
+
+export default { Login, Logout, ResetPassword };

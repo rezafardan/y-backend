@@ -8,9 +8,15 @@ const router = express.Router();
 // CREATE
 router.post(
   "/",
-  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   uploadBlog.single("mainImageId"),
   blogController.createNewBlog
+);
+
+router.post(
+  "/content",
+  uploadBlog.single("content"),
+  blogController.uploadContent
 );
 
 // READ
@@ -27,24 +33,17 @@ router.get(
   blogController.getBlogById
 );
 
-// APPROVE
+// UPDATE
 router.patch(
-  "/:id/approve",
-  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
-  blogController.updateBlog
-);
-
-// PUBLISH
-router.patch(
-  "/:id/publish",
-  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
+  "/update/:id",
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   blogController.updateBlog
 );
 
 // DELETE
 router.delete(
   "/:id",
-  authorizeRole(["ADMINISTRATOR", "EDITOR"]),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   blogController.deleteBlog
 );
 

@@ -1,25 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { BlogStatus, PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
-
-// === BLOG SCHEMA ===
-// id                      String             @id @default(cuid())
-// title                   String             @db.VarChar(255)
-// content                 String             @db.Text
-// status                  BlogStatus         @default(DRAFT)
-// viewCount               Int                @default(0) @map("view_count")
-// likeCount               Int                @default(0) @map("like_count")
-// allowComment            Boolean            @map("allow_comment")
-// schedulePulblishedAt    DateTime?          @map("schedule_published_at")
-// publishedAt             DateTime?          @map("published_at")
-// createdAt               DateTime           @default(now()) @map("created_at")
-// updatedAt               DateTime           @updatedAt @map("edited_at")
-// deletedAt               DateTime?          @map("deleted_at")
-// mainImageId             String?            @map("main_image_id")
-// userId                  String             @map("user_id")
-// categoryId              String             @map("category_id")
-// isUserActive            Boolean?           @default(true) @map("is_user_active")
+import { BlogStatus } from "@prisma/client";
+import prisma from "../prisma/prisma";
 
 // CREATE
 const createNewBlog = async (req: Request, res: Response): Promise<any> => {
@@ -29,11 +10,13 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       title,
       content,
       status,
-      allowComment,
       publishedAt,
       tags,
       categoryId,
+      allowComment,
     } = req.body;
+
+    console.log(req.body);
 
     // Parsing content string menjadi objek JSON
     let parsedContent: any;
@@ -67,6 +50,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     }
 
     const bannerImage = req.file;
+
     const user = req.user as {
       id: string;
     };
@@ -135,6 +119,12 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     const validTags = processedTags.filter(
       (tag) => tag !== null && tag !== undefined
     );
+
+    const imageContent = await prisma.media.update({
+      where: { id: media.id },
+      data: { isUsed: true },
+    });
+
     // DATABASE CONNECTION
     const result = await prisma.blog.create({
       data: {
@@ -146,10 +136,10 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
         publishedAt: publishedAt ? publishedAt : null,
         deletedAt: null,
         status: status as BlogStatus,
+        allowComment: allowCommentBoolean,
         tags: {
           connect: validTags.map((tag) => ({ id: tag.id })),
         },
-        allowComment: allowCommentBoolean,
       },
       include: {
         tags: true,
@@ -175,6 +165,7 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
         title: true,
         content: true,
         mainImageId: true,
+        mainImage: { select: { filepath: true } },
         allowComment: true,
         likeCount: true,
         viewCount: true,
@@ -187,6 +178,7 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
         category: true,
         user: {
           select: {
+            id: true,
             username: true,
             role: true,
             deletedAt: true,
@@ -219,6 +211,7 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
         title: true,
         content: true,
         mainImageId: true,
+        mainImage: { select: { filepath: true } },
         allowComment: true,
         likeCount: true,
         viewCount: true,
@@ -252,26 +245,15 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
 const updateBlog = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const {
-      title,
-      content,
-      mainImageId,
-      status,
-      allowComment,
-      publishedAt,
-      userId,
-      categoryId,
-    } = req.body;
+    const { status, allowComment, publishedAt } = req.body;
+
+    console.log(id);
+    console.log(req.body);
 
     const result = await prisma.blog.update({
       where: { id },
       data: {
-        title,
-        content,
-        mainImageId,
-        userId,
-        categoryId,
-        publishedAt,
+        publishedAt: new Date(),
         status: status as BlogStatus,
         allowComment,
       },
@@ -281,6 +263,7 @@ const updateBlog = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Updating blog data success!" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error updating blog data", error });
   }
 };
@@ -300,10 +283,36 @@ const deleteBlog = async (req: Request, res: Response) => {
   }
 };
 
+const uploadContent = async (req: Request, res: Response) => {
+  try {
+    const { originalname, path, size } = req.file as Express.Multer.File;
+
+    const user = req.user as { id: string };
+    const userId = user.id;
+
+    const media = await prisma.media.create({
+      data: {
+        filename: originalname,
+        filepath: path,
+        filesize: size,
+        isUsed: false,
+        userId,
+      },
+    });
+    res
+      .status(201)
+      .json({ data: media, message: "Image uploaded successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error uploading image", error });
+  }
+};
+
 export default {
   createNewBlog,
   getAllBlogs,
   getBlogById,
   updateBlog,
   deleteBlog,
+  uploadContent,
 };
