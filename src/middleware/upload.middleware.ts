@@ -9,7 +9,7 @@ const createStorage = (folder: string) => {
     },
     filename(req, file, callback) {
       const randomId = crypto.randomBytes(16).toString("hex");
-      const fileExtension = path.extname(file.originalname); // Mengambil ekstensi file
+      const fileExtension = path.extname(file.originalname);
       const fileName = `${randomId}${fileExtension}`;
 
       callback(null, fileName);
@@ -17,14 +17,14 @@ const createStorage = (folder: string) => {
   });
 };
 
-export const uploadProfile = multer({
-  storage: createStorage("profile-image"),
-});
-
-export const uploadBlog = multer({
+export const uploadCover = multer({
   storage: createStorage("blog"),
 });
 
 export const uploadContent = multer({
   storage: createStorage("blog/content"),
+});
+
+export const uploadProfile = multer({
+  storage: createStorage("profile-image"),
 });

@@ -1,7 +1,7 @@
 import express from "express";
 import { authorizeRole } from "../middleware/roleAuthorization.middleware";
 import blogController from "../controllers/blog.controller";
-import { uploadBlog } from "../middleware/upload.middleware";
+import { uploadCover, uploadContent } from "../middleware/upload.middleware";
 
 const router = express.Router();
 
@@ -9,13 +9,21 @@ const router = express.Router();
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
-  uploadBlog.single("mainImageId"),
   blogController.createNewBlog
 );
 
+// POST IMAGE CONTENT
 router.post(
   "/content",
-  uploadBlog.single("content"),
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
+  uploadContent.single("content"),
+  blogController.uploadContent
+);
+
+router.post(
+  "/cover",
+  authorizeRole(["ADMINISTRATOR"]),
+  uploadCover.single("coverImageId"),
   blogController.uploadContent
 );
 

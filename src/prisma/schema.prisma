@@ -46,31 +46,39 @@ enum BlogStatus {
 model Blog {
   id                      String             @id @default(cuid())
   title                   String             @db.VarChar(255)
-  content                 Json             
+  coverImageId            String?            @map("cover_image_id")
+  coverImage              Media?             @relation("BlogCoverImage", fields: [coverImageId], references: [id])
+  @@index([coverImageId], map: "blog_cover_image_id_fkey")
+
+  content                 Json 
+  contentMedia            Media[]            @relation("BlogContentMedia")
+
+  categoryId              String             @map("category_id")
+  category                Category           @relation(fields: [categoryId], references: [id])
+  @@index([categoryId], map: "blog_category_id_fkey")
+
+  tags                    Tag[]              @relation("BlogToTag")
+
+  publishedAt             DateTime?          @map("published_at")
+
   status                  BlogStatus         @default(DRAFT)
+  
+  allowComment            Boolean            @map("allow_comment")
+
   viewCount               Int                @default(0) @map("view_count")
   likeCount               Int                @default(0) @map("like_count")
-  allowComment            Boolean            @map("allow_comment")
-  publishedAt             DateTime?          @map("published_at")
+  
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("edited_at")
   deletedAt               DateTime?          @map("deleted_at")
-  mainImageId             String?            @map("main_image_id")
+  
   userId                  String             @map("user_id")
-  categoryId              String             @map("category_id")
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId], map: "blog_user_id_fkey")
+
   isUserActive            Boolean?           @default(true) @map("is_user_active")
 
-  category                Category           @relation(fields: [categoryId], references: [id])
-  mainImage               Media?             @relation("BlogMainImage", fields: [mainImageId], references: [id])
-  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   comments                Comment[]
-  contentMedia            Media[]            @relation("BlogContentMedia")
-  tags                    Tag[]              @relation("BlogToTag")
-
-  @@index([categoryId], map: "blog_category_id_fkey")
-  @@index([mainImageId], map: "blog_main_image_id_fkey")
-  @@index([userId], map: "blog_user_id_fkey")
 
   @@map("blog")
 }
@@ -126,17 +134,21 @@ model Tag {
 
 model Media {
   id                      String             @id @default(cuid())
+
   filename                String
   filepath                String
   filesize                Int
+
   createdAt               DateTime           @default(now()) @map("created_at")
+
   isUsed                  Boolean            @default(false)
+
   userId                  String             @map("user_id")
-
-  mainImageBlogs          Blog[]             @relation("BlogMainImage")
-  contentBlogs            Blog[]             @relation("BlogContentMedia")
   user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   @@index([userId], map: "media_user_id_fkey")
+
+  coverImageBlogs         Blog[]             @relation("BlogCoverImage")
+  contentBlogs            Blog[]             @relation("BlogContentMedia")
+
   @@map("media")
 }

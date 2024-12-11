@@ -70,10 +70,10 @@ const Login = async (req: Request, res: Response): Promise<any> => {
 
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
     res.cookie("authToken", token, {
-      httpOnly: false,
+      httpOnly: true,
       // secure: process.env.NODE_ENV === "production", // Only on HTTPS production
       secure: false, // Cookies only send in HTTPS production
-      sameSite: "none",
+      sameSite: "strict",
       maxAge: 3600000,
     });
 

@@ -1,6 +1,8 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import { BlogStatus } from "@prisma/client";
+
 import prisma from "../prisma/prisma";
+import { validateTags } from "../services/tag";
 
 // CREATE
 const createNewBlog = async (req: Request, res: Response): Promise<any> => {
@@ -16,133 +18,27 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       allowComment,
     } = req.body;
 
-    console.log(req.body);
-
-    // Parsing content string menjadi objek JSON
-    let parsedContent: any;
-    if (typeof content === "string") {
-      try {
-        parsedContent = JSON.parse(content); // Parse the stringified JSON
-      } catch (error) {
-        return res.status(400).json({ message: "Invalid content format." });
-      }
-    } else {
-      parsedContent = content; // Jika sudah dalam bentuk objek JSON
-    }
-
-    let allowCommentBoolean: boolean;
-    if (typeof allowComment === "string") {
-      if (allowComment.toLowerCase() === "true") {
-        allowCommentBoolean = true;
-      } else if (allowComment.toLowerCase() === "false") {
-        allowCommentBoolean = false;
-      } else {
-        return res.status(400).json({
-          message: "Invalid allowComment value. Must be 'true' or 'false'.",
-        });
-      }
-    } else if (typeof allowComment === "boolean") {
-      allowCommentBoolean = allowComment;
-    } else {
-      return res.status(400).json({
-        message: "allowComment must be a boolean or string ('true'/'false').",
-      });
-    }
-
-    const bannerImage = req.file;
-
     const user = req.user as {
       id: string;
     };
     const userId = user.id;
 
-    if (!bannerImage) {
-      return res.json({ message: "Main Image is Required" });
-    }
-    const media = await prisma.media.create({
-      data: {
-        filename: bannerImage?.originalname,
-        filepath: bannerImage?.path,
-        filesize: bannerImage?.size,
-        createdAt: new Date(),
-        userId,
-      },
-    });
-
-    let parsedTags: any[] = [];
-    if (typeof tags === "string") {
-      try {
-        parsedTags = JSON.parse(tags); // Parse the stringified JSON
-      } catch (error) {
-        return res.status(400).json({ message: "Invalid tags format." });
-      }
-    } else if (Array.isArray(tags)) {
-      parsedTags = tags; // Tags are already an array
-    } else {
-      return res
-        .status(400)
-        .json({ message: "Tags must be an array or string." });
-    }
-
-    const processedTags = await Promise.all(
-      parsedTags.map(async (tag: any) => {
-        try {
-          if (tag.id && tag.id !== "") {
-            console.log("Tag tidak lengkap:", tag);
-            // Jika tag sudah ada (id tidak kosong), cek di database
-            const existingTag = await prisma.tag.findUnique({
-              where: { id: tag.id },
-            });
-            if (existingTag) {
-              return existingTag; // Menggunakan tag yang sudah ada
-            } else {
-              throw new Error(`Tag with id ${tag.id} not found`);
-            }
-          } else {
-            // Jika id kosong, buat tag baru
-            const newTag = await prisma.tag.create({
-              data: {
-                name: tag.name,
-                userId,
-              },
-            });
-            return newTag; // Mengembalikan tag yang baru dibuat
-          }
-        } catch (error: any) {
-          console.error(`Error processing tag: ${error.message}`);
-          throw new Error(`Failed to process tag: ${tag.name}`);
-        }
-      })
-    );
-
-    // Filter tag yang berhasil diproses (menghindari null atau undefined)
-    const validTags = processedTags.filter(
-      (tag) => tag !== null && tag !== undefined
-    );
-
-    const imageContent = await prisma.media.update({
-      where: { id: media.id },
-      data: { isUsed: true },
-    });
+    const tagIds = tags.map((tag: { id: string }) => ({ id: tag.id }));
 
     // DATABASE CONNECTION
     const result = await prisma.blog.create({
       data: {
         title,
-        content: parsedContent,
-        mainImageId: media.id,
+        content: JSON.parse(content),
         userId,
         categoryId,
         publishedAt: publishedAt ? publishedAt : null,
         deletedAt: null,
         status: status as BlogStatus,
-        allowComment: allowCommentBoolean,
+        allowComment,
         tags: {
-          connect: validTags.map((tag) => ({ id: tag.id })),
+          connect: tagIds, // Hanya ID yang dikirimkan
         },
-      },
-      include: {
-        tags: true,
       },
     });
 
@@ -164,8 +60,8 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
         status: true,
         title: true,
         content: true,
-        mainImageId: true,
-        mainImage: { select: { filepath: true } },
+        coverImageId: true,
+        coverImage: { select: { filepath: true } },
         allowComment: true,
         likeCount: true,
         viewCount: true,
@@ -210,8 +106,8 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
         status: true,
         title: true,
         content: true,
-        mainImageId: true,
-        mainImage: { select: { filepath: true } },
+        coverImageId: true,
+        coverImage: { select: { filepath: true } },
         allowComment: true,
         likeCount: true,
         viewCount: true,
