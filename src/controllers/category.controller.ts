@@ -27,7 +27,6 @@ const createNewCategory = async (req: Request, res: Response) => {
         name,
         description,
         userId,
-        deleteAt: null,
       },
     });
 

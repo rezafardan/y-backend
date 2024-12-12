@@ -1,15 +1,20 @@
 import express from "express";
+
 import cors from "cors";
 import path from "path";
 import cookieParser from "cookie-parser";
+
+// MIDDLEWARE
 import logRequest from "./middleware/logs.middleware";
 import accessValidation from "./middleware/accessValidation.midlleware";
+
+// ROUTES
+import administratorRoutes from "./routes/administrator.routes";
 import authRoutes from "./routes/auth.routes";
 import blogRoutes from "./routes/blog.routes";
-import userRoutes from "./routes/user.routes";
 import categoryRoutes from "./routes/category.routes";
-import administratorRoutes from "./routes/administrator.routes";
 import tagRoutes from "./routes/tag.routes";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 const PORT = 3001;
@@ -26,11 +31,11 @@ app.use(express.json());
 // MIDDLEWARE LOG
 app.use(logRequest);
 
-// MIDDLEWARE ACCESS DATA FILE
+// MIDDLEWARE ACCESS ASSET FILES
 app.use("/public", accessValidation, express.static(path.resolve("public")));
 
 // ROUTE LOGIN
-app.use("/api/", authRoutes);
+app.use("/api", authRoutes);
 
 // ROUTE USER
 app.use("/api/user", accessValidation, userRoutes);

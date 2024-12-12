@@ -20,6 +20,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     // GET BODY
     const { username, fullname, email, password, role } = req.body;
     const profileImage = req.file;
+    console.log(profileImage);
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);

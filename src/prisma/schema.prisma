@@ -25,7 +25,7 @@ model User {
   profileImage          String?           @map("profile_image")
   createdAt             DateTime          @default(now()) @map("created_at")
   updatedAt             DateTime          @updatedAt @map("updated_at")
-  deletedAt             DateTime?         @map("deleted_at") // Null if active, new Date if deleted (soft delete)
+  deletedAt             DateTime?         @map("deleted_at")
 
   blogs                 Blog[]
   categories            Category[]
@@ -51,7 +51,8 @@ model Blog {
   @@index([coverImageId], map: "blog_cover_image_id_fkey")
 
   content                 Json 
-  contentMedia            Media[]            @relation("BlogContentMedia")
+  contentImages           Media[]            @relation("ContentImages")
+  
 
   categoryId              String             @map("category_id")
   category                Category           @relation(fields: [categoryId], references: [id])
@@ -70,7 +71,6 @@ model Blog {
   
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("edited_at")
-  deletedAt               DateTime?          @map("deleted_at")
   
   userId                  String             @map("user_id")
   user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -89,7 +89,6 @@ model Category {
   description             String             @db.VarChar(255)
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("updated_at")
-  deleteAt                DateTime?          @map("delete_at")
   userId                  String             @map("user_id")
   isUserActive            Boolean?           @default(true) @map("is_user_active")
 
@@ -148,7 +147,8 @@ model Media {
   @@index([userId], map: "media_user_id_fkey")
 
   coverImageBlogs         Blog[]             @relation("BlogCoverImage")
-  contentBlogs            Blog[]             @relation("BlogContentMedia")
+  contentBlogs            Blog[]             @relation("ContentImages")
+  
 
   @@map("media")
 }

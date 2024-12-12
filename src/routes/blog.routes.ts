@@ -16,15 +16,15 @@ router.post(
 router.post(
   "/content",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
-  uploadContent.single("content"),
-  blogController.uploadContent
+  uploadContent.single("contentimage"),
+  blogController.uploadBlogImage
 );
 
 router.post(
-  "/cover",
-  authorizeRole(["ADMINISTRATOR"]),
-  uploadCover.single("coverImageId"),
-  blogController.uploadContent
+  "/coverimage",
+  authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
+  uploadCover.single("coverimage"),
+  blogController.uploadBlogImage
 );
 
 // READ
