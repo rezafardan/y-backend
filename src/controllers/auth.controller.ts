@@ -49,32 +49,63 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     }
 
     // CREATE TOKEN JWT
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
+    const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+    const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+    if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
       return res
         .status(500)
         .json({ message: "Server error: please contact an administrator" }); // JWT secret is not set
     }
-    const token = jwt.sign(
+
+    const accessToken = jwt.sign(
       {
         id: result.id,
         username: result.username,
         role: result.role,
         deletedAt: result.deletedAt,
       },
-      jwtSecret!,
+      ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "1m",
+      }
+    );
+    const refreshToken = jwt.sign(
+      {
+        id: result.id,
+        username: result.username,
+        role: result.role,
+        deletedAt: result.deletedAt,
+      },
+      REFRESH_TOKEN_SECRET,
+      {
+        expiresIn: "7d",
       }
     );
 
+    // Update user with new refresh token
+    await prisma.user.update({
+      where: { id: result.id },
+      data: {
+        refreshToken: refreshToken,
+        refreshTokenExpiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      },
+    });
+
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
-    res.cookie("authToken", token, {
+    res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === "production", // Only on HTTPS production
-      secure: false, // Cookies only send in HTTPS production
+      secure: process.env.NODE_ENV === "production",
+      // secure: true,
       sameSite: "strict",
-      maxAge: 3600000,
+      maxAge: 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      // secure: true,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     return res.status(200).json({
@@ -86,24 +117,99 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       },
     });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ message: "Error when trying to login", error });
   }
 };
 
+const RefreshToken = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    console.log("Full Cookies:", req.cookies);
+    console.log("Headers:", req.headers);
+    console.log("Refresh Token:", req.cookies.refreshToken);
+
+    if (!refreshToken) {
+      console.log("No refresh token found");
+      return res.status(401).json({ message: "No refresh token found" });
+    }
+
+    // CREATE TOKEN JWT
+    const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+    const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+    if (!ACCESS_TOKEN_SECRET || !REFRESH_TOKEN_SECRET) {
+      return res
+        .status(500)
+        .json({ message: "Server error: please contact an administrator" }); // JWT secret is not set
+    }
+
+    const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as {
+      id: string;
+      username: string;
+    };
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded.id,
+        refreshToken: refreshToken,
+        refreshTokenExpiredAt: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired refresh token" });
+    }
+
+    const newAccessToken = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+      },
+      ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "1m",
+      }
+    );
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 1000, // 15 minutes
+    });
+
+    return res.status(200).json({ message: "Token refreshed successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+};
+
 const Logout = async (req: Request, res: Response): Promise<any> => {
   try {
-    res.clearCookie("authToken", {
+    // Clear cookies
+    res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: true,
-      // secure: process.env.NODE_ENV === "production", // Uncomment for production
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
-    res.clearCookie("userData");
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
 
     return res.status(200).json({ message: "Logout successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Error during logout", error });
   }
 };
@@ -144,4 +250,4 @@ const ResetPassword = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { Login, Logout, ResetPassword };
+export default { Login, RefreshToken, Logout, ResetPassword };

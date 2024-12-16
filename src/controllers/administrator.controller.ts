@@ -9,7 +9,8 @@ const createAdministrator = async (
 ): Promise<any> => {
   try {
     // GET BODY
-    const { username, fullname, email, password, profileImage } = req.body;
+    const { username, fullname, email, password } = req.body;
+    const profileImage = req.file;
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
@@ -23,7 +24,7 @@ const createAdministrator = async (
         email,
         passwordHash,
         role: "ADMINISTRATOR",
-        profileImage,
+        profileImage: profileImage?.path,
         deletedAt: null,
       },
     });
