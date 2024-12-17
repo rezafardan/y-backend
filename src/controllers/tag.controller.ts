@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 
 const createNewTag = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -62,7 +62,6 @@ const createNewTag = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: processedTags, message: "Tags processed successfully." });
   } catch (error: any) {
-    console.error("Error creating tags:", error.message);
     res
       .status(500)
       .json({ message: error.message || "Internal server error." });
@@ -103,8 +102,30 @@ const deleteTag = async (req: Request, res: Response) => {
   }
 };
 
+const getTagByID = async (req: Request, res: Response) => {
+  try {
+    // GET ID
+    const { id } = req.params;
+
+    // DATABASE CONNECTION
+    const result = await prisma.tag.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    res
+      .status(200)
+      .json({ data: result, message: `Get tag by id: ${id} success` });
+  } catch (error) {
+    res.status(500).json({ message: "Error when fetching tag data", error });
+  }
+};
+
 export default {
   createNewTag,
   getAllTags,
   deleteTag,
+  getTagByID,
 };

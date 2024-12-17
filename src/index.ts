@@ -5,8 +5,8 @@ import path from "path";
 import cookieParser from "cookie-parser";
 
 // MIDDLEWARE
-import logRequest from "./middleware/logs.middleware";
-import accessValidation from "./middleware/accessValidation.midlleware";
+import logRequest from "./middlewares/logs.middleware";
+import accessValidation from "./middlewares/accessValidation.midlleware";
 
 // ROUTES
 import administratorRoutes from "./routes/administrator.routes";

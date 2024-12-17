@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 
 // === BLOG SCHEMA ===
 // id                  String             @id @default(cuid())
@@ -34,7 +34,6 @@ const createNewCategory = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Create a category success!" });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Error creating category", error });
   }
 };

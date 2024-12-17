@@ -1,7 +1,7 @@
 import express from "express";
-import { authorizeRole } from "../middleware/roleAuthorization.middleware";
+import { authorizeRole } from "../middlewares/authorizeRole.middleware";
 import blogController from "../controllers/blog.controller";
-import { uploadCover, uploadContent } from "../middleware/upload.middleware";
+import { uploadCover, uploadContent } from "../middlewares/upload.middleware";
 
 const router = express.Router();
 

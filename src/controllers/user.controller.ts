@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 import bcrypt from "bcrypt";
 import fs from "fs";
+import { UserRole } from "@prisma/client";
 
 // === USER SCHEMA ===
 // id                    String            @id @default(cuid())
@@ -54,6 +55,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
       select: {
         id: true,
         username: true,
+        fullname: true,
         email: true,
         role: true,
         profileImage: true,
@@ -81,6 +83,7 @@ const getUserById = async (req: Request, res: Response) => {
       select: {
         id: true,
         username: true,
+        fullname: true,
         email: true,
         role: true,
         profileImage: true,
@@ -104,16 +107,21 @@ const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     // GET BODY
-    const { username, email, role, profileImage } = req.body;
+    const { password, email, role } = req.body;
+    const profileImage = req.file;
+
+    // HASHING PASSWORD
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
 
     // DATABASE CONNECTION WITH SCHEMA
     const result = await prisma.user.update({
       where: { id },
       data: {
-        username,
+        passwordHash,
         email,
         role,
-        profileImage,
+        profileImage: profileImage?.path,
       },
     });
 
@@ -257,6 +265,76 @@ const checkUsername = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
+  try {
+    // Ambil id dari req.user yang telah diverifikasi oleh accessValidation
+    const userId = (req.user as { id: string }).id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Ambil data user berdasarkan id dari database menggunakan Prisma
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        profileImage: true,
+        role: true,
+      },
+    });
+
+    // Jika user tidak ditemukan
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Kirim response dengan data user
+    return res
+      .status(200)
+      .json({ data: user, message: "Get data user logged in success!" });
+  } catch (error) {
+    console.error("Error getting user:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Controller untuk mengupdate data pengguna yang sedang login (dari req.user)
+const updateLoggedInUser = async (req: Request, res: Response) => {
+  try {
+    const userId = (req.user as { id: string }).id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const { username, email, profileImage } = req.body;
+
+    // Validasi input
+    if (!username && !email && !profileImage) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    // Update data user berdasarkan id
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(username && { username }), // Jika username ada dalam body, maka akan diupdate
+        ...(email && { email }), // Jika email ada dalam body, maka akan diupdate
+        ...(profileImage && { profileImage }), // Jika profileImage ada dalam body, maka akan diupdate
+      },
+    });
+
+    // Kirim response dengan data user yang sudah diupdate
+    return res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export default {
   createNewUser,
   getAllUsers,
@@ -266,4 +344,6 @@ export default {
   deleteUserPermanent,
   restoreUserSoftDelete,
   checkUsername,
+  getLoggedInUser,
+  updateLoggedInUser,
 };

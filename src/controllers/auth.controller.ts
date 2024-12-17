@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 
 const Login = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -111,13 +111,13 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     return res.status(200).json({
       message: `Login success, Welcome ${result.username}`,
       user: {
+        id: result.id,
         username: result.username,
         role: result.role,
         profileImage: result.profileImage,
       },
     });
   } catch (error) {
-    console.log(error);
     return res
       .status(500)
       .json({ message: "Error when trying to login", error });
@@ -127,12 +127,8 @@ const Login = async (req: Request, res: Response): Promise<any> => {
 const RefreshToken = async (req: Request, res: Response): Promise<any> => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    console.log("Full Cookies:", req.cookies);
-    console.log("Headers:", req.headers);
-    console.log("Refresh Token:", req.cookies.refreshToken);
 
     if (!refreshToken) {
-      console.log("No refresh token found");
       return res.status(401).json({ message: "No refresh token found" });
     }
 
@@ -187,7 +183,6 @@ const RefreshToken = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json({ message: "Token refreshed successfully" });
   } catch (error) {
-    console.log(error);
     return res.status(401).json({ message: "Unauthorized" });
   }
 };
@@ -209,7 +204,6 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
 
     return res.status(200).json({ message: "Logout successfully" });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: "Error during logout", error });
   }
 };

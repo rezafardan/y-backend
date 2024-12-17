@@ -1,6 +1,6 @@
 import express from "express";
 import administratorController from "../controllers/administrator.controller";
-import { uploadProfile } from "../middleware/upload.middleware";
+import { uploadProfile } from "../middlewares/upload.middleware";
 const router = express.Router();
 
 // CREATE ADMINISTRATOR USER

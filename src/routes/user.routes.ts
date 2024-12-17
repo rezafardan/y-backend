@@ -1,11 +1,26 @@
 import express from "express";
-import { authorizeRole } from "../middleware/roleAuthorization.middleware";
-import userController from "../controllers/user.controller";
-import { uploadProfile } from "../middleware/upload.middleware";
 
+// CONTROLLER
+import userController from "../controllers/user.controller";
+
+// MIDDLEWARE
+import { authorizeRole } from "../middlewares/authorizeRole.middleware";
+import { uploadProfile } from "../middlewares/upload.middleware";
+
+// THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express.Router();
 
-// CREATE
+// CHECK USER DATA BUT ONLY DATA USER LOGGED IN
+// http://hostname/api/user/me
+router.get("/me", userController.getLoggedInUser);
+
+// UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
+// http://hostname/api/user/me
+router.patch("/me");
+
+// CREATE A NEW USER
+// POST MULTIPART/FORM-DATA
+// http://hostname/api/user
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR"]),
@@ -13,45 +28,53 @@ router.post(
   userController.createNewUser
 );
 
-// READ
+// READ ALL USER DATA
+// http://hostname/api/user
 router.get("/", authorizeRole(["ADMINISTRATOR"]), userController.getAllUsers);
 
-// READ BY ID
+// READ USER DATA BY ID
+// http://hostname/api/user/ID?
 router.get(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.getUserById
 );
 
-// UPDATE
+// UPDATE USER DATA BY ID
+// http://hostname/api/user/ID?
 router.patch(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
+  uploadProfile.single("profileImage"),
   userController.updateUser
 );
 
-// SOFT DELETE
+// SOFT DELETE USER DATA BY ID
+// http://hostname/api/user/ID?
 router.patch(
   "/softdelete/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.softDeleteUser
 );
 
-// RESTORE USER SOFT DELETE
+// RESTORE USER SOFT DELETE BY ID
+// http://hostname/api/user/ID?
 router.patch(
   "/restore/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.restoreUserSoftDelete
 );
 
-// PERMANENT DELETE
+// PERMANENT DELETE USER DATA BY ID
+// http://hostname/api/user/ID?
 router.delete(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.deleteUserPermanent
 );
 
-// CHECK USERNAME
+// CHECK USERNAME FOR CREATE A NEW USER DATA
+// http://hostname/api/user/check-username
 router.post(
   "/check-username",
   authorizeRole(["ADMINISTRATOR"]),

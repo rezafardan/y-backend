@@ -1,4 +1,4 @@
-import prisma from "../../prisma/prisma";
+import prisma from "../../models/prisma";
 import { Tag } from "@prisma/client";
 
 export const createTags = async (tags: Tag[], userId: string) => {

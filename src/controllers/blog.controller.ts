@@ -1,4 +1,4 @@
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 import { Request, Response } from "express";
 import { BlogStatus } from "@prisma/client";
 import { createTags } from "../services/blog/tag.service";
@@ -75,7 +75,6 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Create a blog success!" });
   } catch (error) {
-    console.error(error);
     return res.status(500).json({ message: "Error creating blog", error });
   }
 };
@@ -102,7 +101,6 @@ const uploadBlogImage = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: media, message: "Image uploaded successfully!" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Error uploading image", error });
   }
 };
@@ -195,9 +193,6 @@ const updateBlog = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, allowComment, publishedAt } = req.body;
 
-    console.log(id);
-    console.log(req.body);
-
     const result = await prisma.blog.update({
       where: { id },
       data: {
@@ -211,7 +206,6 @@ const updateBlog = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Updating blog data success!" });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: "Error updating blog data", error });
   }
 };

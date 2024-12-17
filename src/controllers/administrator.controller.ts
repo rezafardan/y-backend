@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import prisma from "../prisma/prisma";
+import prisma from "../models/prisma";
 import bcrypt from "bcrypt";
 
 // CREATE ADMINISTRATOR USER

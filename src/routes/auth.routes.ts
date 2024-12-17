@@ -1,7 +1,7 @@
 import express from "express";
 import authController from "../controllers/auth.controller";
-import { authorizeRole } from "../middleware/roleAuthorization.middleware";
-import accessValidation from "../middleware/accessValidation.midlleware";
+import { authorizeRole } from "../middlewares/authorizeRole.middleware";
+import accessValidation from "../middlewares/accessValidation.midlleware";
 
 const router = express.Router();
 
