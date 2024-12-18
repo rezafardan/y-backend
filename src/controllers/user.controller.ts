@@ -1,21 +1,16 @@
 import { Request, Response } from "express";
-import prisma from "../models/prisma";
 import bcrypt from "bcrypt";
 import fs from "fs";
-import { UserRole } from "@prisma/client";
 
-// === USER SCHEMA ===
-// id                    String            @id @default(cuid())
-// username              String            @unique
-// email                 String            @unique
-// passwordHash          String            @map("password_hash")
-// role                  UserRole          @default(AUTHOR)
-// profileImage          String            @map("profile_image")
-// createdAt             DateTime          @default(now()) @map("created_at")
-// updatedAt             DateTime          @updatedAt @map("updated_at")
-// deletedAt             DateTime?         @map("deleted_at") // Null if active, date if deleted (soft delete)
+// ORM
+import prisma from "../models/prisma";
 
-// CREATE
+/* ====================================================================== 
+
+
+
+  CREATE
+*/
 const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -26,7 +21,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.create({
       data: {
         username,
@@ -47,10 +42,15 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-// READ
+/* ======================================================================
+
+
+
+  GET ALL USER DATA
+*/
 const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   try {
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.findMany({
       select: {
         id: true,
@@ -71,13 +71,19 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-// READ BY ID
+/* 
+====================================================================== 
+
+
+
+  GET USER DATA BY ID
+*/
 const getUserById = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -100,7 +106,13 @@ const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-// UPDATE
+/* 
+====================================================================== 
+
+
+
+  UPDATE USER DATA BY ID
+*/
 const updateUser = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -114,7 +126,7 @@ const updateUser = async (req: Request, res: Response) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.update({
       where: { id },
       data: {
@@ -133,13 +145,19 @@ const updateUser = async (req: Request, res: Response) => {
   }
 };
 
-// SOFT DELETE
+/* 
+====================================================================== 
+
+
+
+  SOFT DELETE USER DATA
+*/
 const softDeleteUser = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.update({
       where: { id },
       data: { updatedAt: new Date(), deletedAt: new Date() },
@@ -168,13 +186,19 @@ const softDeleteUser = async (req: Request, res: Response) => {
   }
 };
 
-// RESTORE USER
+/* 
+====================================================================== 
+
+
+
+  RESTORE USER DATA WHEN STATUS SOFT DELETE
+*/
 const restoreUserSoftDelete = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.update({
       where: { id },
       data: { deletedAt: null },
@@ -201,7 +225,13 @@ const restoreUserSoftDelete = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE PERMANENT
+/* 
+====================================================================== 
+
+
+
+  PERMANTENT DELETE USER DATA
+*/
 const deleteUserPermanent = async (
   req: Request,
   res: Response
@@ -232,7 +262,7 @@ const deleteUserPermanent = async (
       }
     }
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.delete({
       where: { id },
     });
@@ -245,12 +275,19 @@ const deleteUserPermanent = async (
   }
 };
 
+/* 
+====================================================================== 
+
+
+
+  CHECK USERNAME FOR CREATE A NEW USER TO AVOID DUPLICATE USER DATA
+*/
 const checkUsername = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
     const { username } = req.body;
 
-    // DATABASE CONNECTION WITH SCHEMA
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.findUnique({
       where: { username },
     });
@@ -265,6 +302,13 @@ const checkUsername = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
+/* 
+====================================================================== 
+
+
+
+  GET USER DATA THAT LOGGED IN FOR VIEW  USER PROFILE ACTION
+*/
 const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // Ambil id dari req.user yang telah diverifikasi oleh accessValidation
@@ -274,12 +318,13 @@ const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Ambil data user berdasarkan id dari database menggunakan Prisma
+    // DATABASE CONNECTION WITH ORM
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         username: true,
+        fullname: true,
         email: true,
         profileImage: true,
         role: true,
@@ -301,8 +346,17 @@ const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-// Controller untuk mengupdate data pengguna yang sedang login (dari req.user)
-const updateLoggedInUser = async (req: Request, res: Response) => {
+/* 
+====================================================================== 
+
+
+
+  PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
+*/
+const updateLoggedInUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
   try {
     const userId = (req.user as { id: string }).id;
 
@@ -310,24 +364,23 @@ const updateLoggedInUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const { username, email, profileImage } = req.body;
+    const { username, email, fullname, profileImage } = req.body;
 
-    // Validasi input
     if (!username && !email && !profileImage) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
-    // Update data user berdasarkan id
+    // DATABASE CONNECTION WITH ORM
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(username && { username }), // Jika username ada dalam body, maka akan diupdate
-        ...(email && { email }), // Jika email ada dalam body, maka akan diupdate
-        ...(profileImage && { profileImage }), // Jika profileImage ada dalam body, maka akan diupdate
+        ...(username && { username }),
+        ...(email && { email }),
+        ...(fullname && { fullname }),
+        ...(profileImage && { profileImage }),
       },
     });
 
-    // Kirim response dengan data user yang sudah diupdate
     return res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Error updating user:", error);

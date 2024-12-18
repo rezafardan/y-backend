@@ -10,17 +10,29 @@ import { uploadProfile } from "../middlewares/upload.middleware";
 // THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express.Router();
 
-// CHECK USER DATA BUT ONLY DATA USER LOGGED IN
-// http://hostname/api/user/me
+/* 
+
+
+CHECK USER DATA BUT ONLY DATA USER LOGGED IN
+  http://hostname/api/user/me
+*/
 router.get("/me", userController.getLoggedInUser);
 
-// UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
-// http://hostname/api/user/me
-router.patch("/me");
+/* 
 
-// CREATE A NEW USER
-// POST MULTIPART/FORM-DATA
-// http://hostname/api/user
+
+UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
+  http://hostname/api/user/me
+*/
+router.patch("/me", userController.updateLoggedInUser);
+
+/* 
+
+
+CREATE A NEW USER
+  POST MULTIPART/FORM-DATA
+  http://hostname/api/user
+*/
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR"]),
@@ -28,20 +40,32 @@ router.post(
   userController.createNewUser
 );
 
-// READ ALL USER DATA
-// http://hostname/api/user
+/* 
+
+
+READ ALL USER DATA
+  http://hostname/api/user
+*/
 router.get("/", authorizeRole(["ADMINISTRATOR"]), userController.getAllUsers);
 
-// READ USER DATA BY ID
-// http://hostname/api/user/ID?
+/* 
+
+
+READ USER DATA BY ID
+  http://hostname/api/user/ID?
+*/
 router.get(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.getUserById
 );
 
-// UPDATE USER DATA BY ID
-// http://hostname/api/user/ID?
+/* 
+
+
+UPDATE USER DATA BY ID
+  http://hostname/api/user/ID?
+*/
 router.patch(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
@@ -49,32 +73,48 @@ router.patch(
   userController.updateUser
 );
 
-// SOFT DELETE USER DATA BY ID
-// http://hostname/api/user/ID?
+/* 
+
+
+SOFT DELETE USER DATA BY ID
+  http://hostname/api/user/ID?
+*/
 router.patch(
   "/softdelete/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.softDeleteUser
 );
 
-// RESTORE USER SOFT DELETE BY ID
-// http://hostname/api/user/ID?
+/* 
+
+
+RESTORE USER SOFT DELETE BY ID
+  http://hostname/api/user/ID?
+*/
 router.patch(
   "/restore/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.restoreUserSoftDelete
 );
 
-// PERMANENT DELETE USER DATA BY ID
-// http://hostname/api/user/ID?
+/* 
+
+
+PERMANENT DELETE USER DATA BY ID
+  http://hostname/api/user/ID?
+*/
 router.delete(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
   userController.deleteUserPermanent
 );
 
-// CHECK USERNAME FOR CREATE A NEW USER DATA
-// http://hostname/api/user/check-username
+/* 
+
+
+CHECK USERNAME FOR CREATE A NEW USER DATA
+  http://hostname/api/user/check-username
+*/
 router.post(
   "/check-username",
   authorizeRole(["ADMINISTRATOR"]),

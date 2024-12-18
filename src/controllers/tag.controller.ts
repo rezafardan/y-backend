@@ -1,8 +1,17 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
+
+// ORM
 import prisma from "../models/prisma";
 
+/* ====================================================================== 
+
+
+
+  CREATE
+*/
 const createNewTag = async (req: Request, res: Response): Promise<any> => {
   try {
+    // GET BODY
     const { tags } = req.body;
 
     // Validasi pengguna

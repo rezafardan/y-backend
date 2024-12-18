@@ -66,7 +66,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       },
       ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "1m",
+        expiresIn: "15m",
       }
     );
     const refreshToken = jwt.sign(
@@ -97,7 +97,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       secure: process.env.NODE_ENV === "production",
       // secure: true,
       sameSite: "strict",
-      maxAge: 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     res.cookie("refreshToken", refreshToken, {
@@ -170,7 +170,7 @@ const RefreshToken = async (req: Request, res: Response): Promise<any> => {
       },
       ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "1m",
+        expiresIn: "15m",
       }
     );
 
@@ -178,7 +178,7 @@ const RefreshToken = async (req: Request, res: Response): Promise<any> => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
     return res.status(200).json({ message: "Token refreshed successfully" });

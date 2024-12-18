@@ -2,8 +2,6 @@ import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { UserRole } from "@prisma/client";
 
-// Membuat interface untuk req.user
-
 // MIDDLEWARE TO AUTHENTICATION ACCESS VALIDATION BY TOKEN
 // IF USER CREATE A REQUEST WITHOUT TOKEN, REQUEST CAN BE DROP OR REJECT
 const accessValidation = (req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +26,7 @@ const accessValidation = (req: Request, res: Response, next: NextFunction) => {
       username: string;
       role: UserRole;
     };
+
     req.user = { id: decode.id, username: decode.username, role: decode.role };
 
     next();
