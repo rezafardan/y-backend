@@ -8,7 +8,6 @@ const router = express.Router();
 // LOGIN
 router.post("/login", authController.Login);
 
-router.post("/refresh-token", authController.RefreshToken);
 // lOGOUT
 router.post("/logout", accessValidation, authController.Logout);
 
