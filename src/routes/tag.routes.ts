@@ -22,6 +22,8 @@ router.get(
   tagController.getTagByID
 );
 
+router.patch("/:id", authorizeRole(["ADMINISTRATOR"]), tagController.updateTag);
+
 router.delete(
   "/:id",
   authorizeRole(["ADMINISTRATOR", "AUTHOR", "EDITOR"]),

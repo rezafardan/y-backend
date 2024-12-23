@@ -3,12 +3,7 @@ import { Request, Response } from "express";
 // ORM
 import prisma from "../models/prisma";
 
-/* ====================================================================== 
-
-
-
-  CREATE
-*/
+//  CREATE
 const createNewTag = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -132,9 +127,34 @@ const getTagByID = async (req: Request, res: Response) => {
   }
 };
 
+const updateTag = async (req: Request, res: Response) => {
+  try {
+    // GET ID
+    const { id } = req.params;
+
+    // GET BODY
+    const { name } = req.body;
+
+    // DATABASE CONNECTION
+    const result = await prisma.tag.update({
+      where: { id },
+      data: {
+        name,
+      },
+    });
+
+    res
+      .status(201)
+      .json({ data: result, message: "Updating category data success!" });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating category data", error });
+  }
+};
+
 export default {
   createNewTag,
   getAllTags,
   deleteTag,
   getTagByID,
+  updateTag,
 };

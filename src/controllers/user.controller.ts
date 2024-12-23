@@ -5,12 +5,7 @@ import fs from "fs";
 // ORM
 import prisma from "../models/prisma";
 
-/* ====================================================================== 
-
-
-
-  CREATE
-*/
+// CREATE
 const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -71,13 +66,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-/* 
-====================================================================== 
-
-
-
-  GET USER DATA BY ID
-*/
+//  GET USER DATA BY ID
 const getUserById = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -106,52 +95,52 @@ const getUserById = async (req: Request, res: Response) => {
   }
 };
 
-/* 
-====================================================================== 
-
-
-
-  UPDATE USER DATA BY ID
-*/
-const updateUser = async (req: Request, res: Response) => {
+// UPDATE USER DATA BY ID
+const updateUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET ID
     const { id } = req.params;
 
     // GET BODY
-    const { password, email, role } = req.body;
+    const { fullname, email, password, role } = req.body;
     const profileImage = req.file;
 
+    const existingUser = await prisma.user.findUnique({ where: { id } });
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const updatedData = {
+      fullname: fullname || existingUser.fullname,
+      email: email || existingUser.email,
+      role: role || existingUser.role,
+      profileImage: profileImage?.path || existingUser.profileImage,
+      passwordHash: existingUser.passwordHash, // Default old password
+    };
+
     // HASHING PASSWORD
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updatedData.passwordHash = await bcrypt.hash(password, salt);
+    }
 
     // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.update({
       where: { id },
-      data: {
-        passwordHash,
-        email,
-        role,
-        profileImage: profileImage?.path,
-      },
+      data: updatedData,
     });
 
     res
       .status(201)
       .json({ data: result, message: "Updating user data success!" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error updating user data", error });
   }
 };
 
-/* 
-====================================================================== 
+//  SOFT DELETE USER DATA
 
-
-
-  SOFT DELETE USER DATA
-*/
 const softDeleteUser = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -186,13 +175,8 @@ const softDeleteUser = async (req: Request, res: Response) => {
   }
 };
 
-/* 
-====================================================================== 
+//  RESTORE USER DATA WHEN STATUS SOFT DELETE
 
-
-
-  RESTORE USER DATA WHEN STATUS SOFT DELETE
-*/
 const restoreUserSoftDelete = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -225,13 +209,7 @@ const restoreUserSoftDelete = async (req: Request, res: Response) => {
   }
 };
 
-/* 
-====================================================================== 
-
-
-
-  PERMANTENT DELETE USER DATA
-*/
+//  PERMANTENT DELETE USER DATA
 const deleteUserPermanent = async (
   req: Request,
   res: Response
@@ -275,13 +253,8 @@ const deleteUserPermanent = async (
   }
 };
 
-/* 
-====================================================================== 
+// CHECK USERNAME FOR CREATE A NEW USER TO AVOID DUPLICATE USER DATA
 
-
-
-  CHECK USERNAME FOR CREATE A NEW USER TO AVOID DUPLICATE USER DATA
-*/
 const checkUsername = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -302,13 +275,8 @@ const checkUsername = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-/* 
-====================================================================== 
+//  GET USER DATA THAT LOGGED IN FOR VIEW  USER PROFILE ACTION
 
-
-
-  GET USER DATA THAT LOGGED IN FOR VIEW  USER PROFILE ACTION
-*/
 const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // Ambil id dari req.user yang telah diverifikasi oleh accessValidation
@@ -346,13 +314,7 @@ const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-/* 
-====================================================================== 
-
-
-
-  PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
-*/
+// PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
 const updateLoggedInUser = async (
   req: Request,
   res: Response
@@ -364,24 +326,39 @@ const updateLoggedInUser = async (
       return res.status(400).json({ message: "User not found" });
     }
 
-    const { username, email, fullname, profileImage } = req.body;
+    const { fullname, email, password, role } = req.body;
+    const profileImage = req.file;
 
-    if (!username && !email && !profileImage) {
-      return res.status(400).json({ message: "No fields to update" });
+    // Mendapatkan data user yang ada
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // DATABASE CONNECTION WITH ORM
-    const updatedUser = await prisma.user.update({
+    const updatedData: any = {
+      fullname: fullname || existingUser.fullname,
+      email: email || existingUser.email,
+      role: role || existingUser.role,
+      profileImage: profileImage?.path || existingUser.profileImage,
+    };
+
+    // Jika password ada, hash password baru
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updatedData.passwordHash = await bcrypt.hash(password, salt);
+    }
+
+    // Update user di database
+    const result = await prisma.user.update({
       where: { id: userId },
-      data: {
-        ...(username && { username }),
-        ...(email && { email }),
-        ...(fullname && { fullname }),
-        ...(profileImage && { profileImage }),
-      },
+      data: updatedData,
     });
 
-    return res.status(200).json(updatedUser);
+    res
+      .status(200)
+      .json({ data: result, message: "User profile updated successfully!" });
   } catch (error) {
     console.error("Error updating user:", error);
     return res.status(500).json({ message: "Internal server error" });

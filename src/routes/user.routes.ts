@@ -24,7 +24,11 @@ router.get("/me", userController.getLoggedInUser);
 UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
   http://hostname/api/user/me
 */
-router.patch("/me", userController.updateLoggedInUser);
+router.patch(
+  "/me",
+  uploadProfile.single("profileImage"),
+  userController.updateLoggedInUser
+);
 
 /* 
 
