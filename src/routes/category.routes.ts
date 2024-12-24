@@ -4,6 +4,11 @@ import categoryController from "../controllers/category.controller";
 
 const router = express.Router();
 
+router.get(
+  "/categories-with-blog-count",
+  categoryController.getCategoriesWithBlogCount
+);
+
 // CREATE
 router.post(
   "/",

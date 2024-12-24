@@ -134,12 +134,35 @@ const updateCategory = async (req: Request, res: Response) => {
 };
 
 // DELETE
-const deleteCategory = async (req: Request, res: Response) => {
+const deleteCategory = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET UD
     const { id } = req.params;
+    // Cek apakah kategori masih digunakan oleh blog
+    const categoryInUse = await prisma.category.findUnique({
+      where: { id },
+      select: {
+        Blogs: {
+          select: {
+            id: true,
+            title: true, // Mengambil judul blog yang terkait dengan kategori
+          },
+        },
+      },
+    });
 
-    // DATABASE CONNECTION
+    if (categoryInUse && categoryInUse.Blogs.length > 0) {
+      // Mengambil jumlah total blog yang menggunakan tag
+      const blogCount = categoryInUse.Blogs.length;
+
+      return res.status(400).json({
+        message: `This category is still used in ${blogCount} blog${
+          blogCount > 1 ? "s" : ""
+        }. Cannot delete category.`,
+      });
+    }
+
+    // Jika kategori tidak digunakan, lakukan penghapusan
     const result = await prisma.category.delete({
       where: { id },
     });
@@ -152,10 +175,36 @@ const deleteCategory = async (req: Request, res: Response) => {
   }
 };
 
+const getCategoriesWithBlogCount = async (req: Request, res: Response) => {
+  try {
+    // Mengambil data kategori dengan jumlah blog per kategori
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        _count: {
+          select: { Blogs: true }, // Menghitung jumlah blog untuk tiap kategori
+        },
+      },
+    });
+
+    res.status(200).json({
+      data: categories,
+      message: "Fetched categories with blog count successfully",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching categories with blog count", error });
+  }
+};
+
 export default {
   createNewCategory,
   getCategoryByID,
   getAllCategories,
   updateCategory,
   deleteCategory,
+  getCategoriesWithBlogCount,
 };

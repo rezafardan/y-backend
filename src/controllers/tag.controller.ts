@@ -23,6 +23,7 @@ const createNewTag = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "Tags must be an array of objects." });
     }
 
+    console.log(tags);
     const processedTags = await Promise.all(
       tags.map(async (tag) => {
         if (!tag.name || typeof tag.name !== "string") {
@@ -43,8 +44,10 @@ const createNewTag = async (req: Request, res: Response): Promise<any> => {
 
         // Validasi jika ada tag dengan nama yang sama
         const existingTagByName = await prisma.tag.findFirst({
-          where: { name: tag.name, userId }, // Periksa nama tag khusus pengguna
+          where: { name: tag.name }, // Periksa nama tag khusus pengguna
         });
+
+        console.log(existingTagByName);
 
         if (existingTagByName) {
           throw new Error(`Tag with name "${tag.name}" already exists.`);
@@ -92,9 +95,33 @@ const getAllTags = async (req: Request, res: Response) => {
   }
 };
 
-const deleteTag = async (req: Request, res: Response) => {
+const deleteTag = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
+
+    // Cek apakah tag masih digunakan oleh blog
+    const tagInUse = await prisma.tag.findUnique({
+      where: { id },
+      select: {
+        blog: {
+          select: {
+            id: true,
+            title: true, // Mengambil judul blog yang terkait dengan tag
+          },
+        },
+      },
+    });
+
+    if (tagInUse && tagInUse.blog.length > 0) {
+      // Mengambil judul blog pertama yang menggunakan tag
+      const blogCount = tagInUse.blog.length;
+
+      return res.status(400).json({
+        message: `This tag is still used in ${blogCount} blog${
+          blogCount > 1 ? "s" : ""
+        }. Cannot delete tag.`,
+      });
+    }
 
     const result = await prisma.tag.delete({
       where: { id },
