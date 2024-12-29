@@ -4,6 +4,7 @@ import { BlogStatus } from "@prisma/client";
 import { createTags } from "../services/blog/tag.service";
 import { extractContentImageIds } from "../services/blog/contentImage.service";
 import { validateBlogStatus } from "../services/blog/status.service";
+import validateBlogFields from "../services/blog/validateBlogStatus.service";
 
 // CREATE
 const createNewBlog = async (req: Request, res: Response): Promise<any> => {
@@ -23,6 +24,16 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       allowComment,
     } = req.body;
 
+    try {
+      validateBlogFields(req.body, status);
+    } catch (error) {
+      return res.status(400).json({ message: "Error" });
+    }
+
+    if (!content) {
+      return res.status(400).json({ message: "Content cannot be empty" });
+    }
+
     const contentImageIds = extractContentImageIds(JSON.parse(content));
 
     let publicationDate;
@@ -34,7 +45,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
 
     const result = await prisma.$transaction(async (prisma) => {
       // Buat tags jika belum ada
-      const allTagIds = await createTags(tags, userId);
+      const allTagIds = await createTags(tags, userId, status);
 
       // Buat blog baru
       const createdBlog = await prisma.blog.create({
@@ -57,16 +68,18 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       });
 
       // Update status 'isUsed' pada gambar yang digunakan (cover dan konten)
-      await prisma.media.updateMany({
-        where: {
-          id: {
-            in: [coverImageId, ...contentImageIds], // Gabungkan cover dan gambar konten
+      if (status !== "DRAFT") {
+        await prisma.media.updateMany({
+          where: {
+            id: {
+              in: [coverImageId, ...contentImageIds], // Gabungkan cover dan gambar konten
+            },
           },
-        },
-        data: {
-          isUsed: true,
-        },
-      });
+          data: {
+            isUsed: true,
+          },
+        });
+      }
 
       return createdBlog;
     });
@@ -75,6 +88,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Create a blog success!" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Error creating blog", error });
   }
 };
@@ -190,15 +204,39 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
 // UPDATE
 const updateBlog = async (req: Request, res: Response) => {
   try {
+    const userId = (req.user as { id: string }).id;
     const { id } = req.params;
-    const { status, allowComment, publishedAt } = req.body;
+    const {
+      title,
+      content,
+      status,
+      allowComment,
+      publishedAt,
+      coverImageId,
+      tags,
+    } = req.body;
+
+    console.log(req.body);
+
+    const tagIds = await createTags(tags, userId, status);
+
+    const contentImageIds = extractContentImageIds(JSON.parse(content));
 
     const result = await prisma.blog.update({
       where: { id },
       data: {
-        publishedAt: new Date(),
+        publishedAt,
         status: status as BlogStatus,
         allowComment,
+        title,
+        content: JSON.parse(content),
+        contentImages: {
+          connect: contentImageIds.map((id) => ({ id })),
+        },
+        coverImageId,
+        tags: {
+          connect: tagIds,
+        },
       },
     });
 
@@ -206,6 +244,7 @@ const updateBlog = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Updating blog data success!" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error updating blog data", error });
   }
 };

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 // ORM
 import prisma from "../models/prisma";
+import { processTag } from "../services/tag/processTag.service";
 
 //  CREATE
 const createNewTag = async (req: Request, res: Response): Promise<any> => {
@@ -14,7 +15,6 @@ const createNewTag = async (req: Request, res: Response): Promise<any> => {
     if (!user || !user.id) {
       return res.status(401).json({ message: "Unauthorized access." });
     }
-    const userId = user.id;
 
     // Validasi format tags
     if (!Array.isArray(tags)) {
@@ -23,46 +23,8 @@ const createNewTag = async (req: Request, res: Response): Promise<any> => {
         .json({ message: "Tags must be an array of objects." });
     }
 
-    console.log(tags);
     const processedTags = await Promise.all(
-      tags.map(async (tag) => {
-        if (!tag.name || typeof tag.name !== "string") {
-          throw new Error("Each tag must have a valid 'name'.");
-        }
-
-        // Jika ID ada, cari tag yang sudah ada
-        if (tag.id) {
-          const existingTag = await prisma.tag.findUnique({
-            where: { id: tag.id },
-          });
-
-          if (!existingTag) {
-            throw new Error(`Tag with ID ${tag.id} does not exist.`);
-          }
-          return existingTag;
-        }
-
-        // Validasi jika ada tag dengan nama yang sama
-        const existingTagByName = await prisma.tag.findFirst({
-          where: { name: tag.name }, // Periksa nama tag khusus pengguna
-        });
-
-        console.log(existingTagByName);
-
-        if (existingTagByName) {
-          throw new Error(`Tag with name "${tag.name}" already exists.`);
-        }
-
-        // Jika ID tidak ada dan name tidak duplikat, buat tag baru
-        const newTag = await prisma.tag.create({
-          data: {
-            name: tag.name,
-            userId, // Hubungkan ke pengguna
-          },
-        });
-
-        return newTag;
-      })
+      tags.map((tag) => processTag(tag, user.id))
     );
 
     res

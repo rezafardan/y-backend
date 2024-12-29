@@ -43,7 +43,7 @@ router.get(
 
 // UPDATE
 router.patch(
-  "/update/:id",
+  "/:id",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   blogController.updateBlog
 );

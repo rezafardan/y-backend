@@ -1,7 +1,16 @@
 import prisma from "../../models/prisma";
 import { Tag } from "@prisma/client";
 
-export const createTags = async (tags: Tag[], userId: string) => {
+export const createTags = async (
+  tags: Tag[],
+  userId: string,
+  status: string
+) => {
+  // Jika statusnya adalah "DRAFT" dan tags kosong, perbolehkan tag kosong
+  if (status === "DRAFT") {
+    return []; // Kembalikan array kosong jika status adalah DRAFT dan tidak ada tag
+  }
+
   // SEPARATE NEW TAGS (WITHOUT ID) AND EXISTING TAGS (WITH ID)
   const newTags = tags.filter((tag: { id: string }) => !tag.id);
   const existingTags = tags.filter((tag: { id: string }) => tag.id);
@@ -23,7 +32,7 @@ export const createTags = async (tags: Tag[], userId: string) => {
     });
   }
 
-  // COMBINE CREATED TAG IDs AND EXISTING TAG IDs
+  // COMBINE CREATED TAG IDS AND EXISTING TAG IDS
   return [
     ...existingTags.map((tag: { id: any }) => ({ id: tag.id })),
     ...createdTags,

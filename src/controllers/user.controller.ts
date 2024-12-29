@@ -12,6 +12,9 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     const { username, fullname, email, password, role } = req.body;
     const profileImage = req.file;
 
+    console.log(req.body);
+    console.log(req.file);
+
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
@@ -37,12 +40,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-/* ======================================================================
-
-
-
-  GET ALL USER DATA
-*/
+// GET ALL USER DATA
 const getAllUsers = async (req: Request, res: Response): Promise<any> => {
   try {
     // DATABASE CONNECTION WITH ORM
@@ -140,7 +138,6 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
 };
 
 //  SOFT DELETE USER DATA
-
 const softDeleteUser = async (req: Request, res: Response) => {
   try {
     // GET ID
@@ -176,7 +173,6 @@ const softDeleteUser = async (req: Request, res: Response) => {
 };
 
 //  RESTORE USER DATA WHEN STATUS SOFT DELETE
-
 const restoreUserSoftDelete = async (req: Request, res: Response) => {
   try {
     // GET ID
