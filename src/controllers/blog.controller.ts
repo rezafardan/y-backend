@@ -15,6 +15,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
     // GET BODY DATA
     const {
       title,
+      slug,
       coverImageId,
       content,
       categoryId,
@@ -52,6 +53,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
         data: {
           userId,
           title,
+          slug,
           coverImageId,
           content: JSON.parse(content),
           contentImages: {
@@ -127,6 +129,7 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
         id: true,
         status: true,
         title: true,
+        slug: true,
         content: true,
         coverImageId: true,
         coverImage: { select: { filepath: true } },
@@ -170,6 +173,7 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
         id: true,
         status: true,
         title: true,
+        slug: true,
         content: true,
         coverImageId: true,
         coverImage: { select: { filepath: true } },
@@ -186,6 +190,7 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
           select: {
             username: true,
             role: true,
+            profileImage: true,
             deletedAt: true,
           },
         },

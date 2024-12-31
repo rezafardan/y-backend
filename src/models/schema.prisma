@@ -46,6 +46,7 @@ enum BlogStatus {
 model Blog {
   id                      String             @id @default(cuid())
   title                   String             @db.VarChar(255)
+  slug                    String             @unique
   coverImageId            String?            @map("cover_image_id")
   coverImage              Media?             @relation("BlogCoverImage", fields: [coverImageId], references: [id])
   @@index([coverImageId], map: "blog_cover_image_id_fkey")
