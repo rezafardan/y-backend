@@ -69,6 +69,7 @@ const getUserById = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
+    console.log(id);
 
     // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.findUnique({

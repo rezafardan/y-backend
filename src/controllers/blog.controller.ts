@@ -25,6 +25,8 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
       allowComment,
     } = req.body;
 
+    console.log(req.body);
+
     try {
       validateBlogFields(req.body, status);
     } catch (error) {
@@ -238,7 +240,7 @@ const updateBlog = async (req: Request, res: Response) => {
         contentImages: {
           connect: contentImageIds.map((id) => ({ id })),
         },
-        coverImageId,
+        coverImageId: coverImageId ? coverImageId : null,
         tags: {
           connect: tagIds,
         },

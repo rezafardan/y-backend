@@ -12,14 +12,22 @@ import prisma from "../models/prisma";
 // isUserActive        Boolean?           @map("is_user_active")
 
 // CREATE
-const createNewCategory = async (req: Request, res: Response) => {
+const createNewCategory = async (req: Request, res: Response): Promise<any> => {
   try {
+    const userId = (req.user as { id: string }).id;
     // GET BODY
     const { name, description } = req.body;
-    const user = req.user as {
-      id: string;
-    };
-    const userId = user.id;
+
+    const existingCategory = await prisma.category.findFirst({
+      where: { name: name },
+    });
+
+    if (existingCategory) {
+      return res.status(404).json({
+        message:
+          "The category is alredy exist, please change the category name",
+      });
+    }
 
     // DATABASE CONNECTION
     const result = await prisma.category.create({

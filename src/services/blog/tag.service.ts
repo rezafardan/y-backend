@@ -7,8 +7,8 @@ export const createTags = async (
   status: string
 ) => {
   // Jika statusnya adalah "DRAFT" dan tags kosong, perbolehkan tag kosong
-  if (status === "DRAFT") {
-    return []; // Kembalikan array kosong jika status adalah DRAFT dan tidak ada tag
+  if (status === "DRAFT" && (!tags || tags.length === 0)) {
+    return [];
   }
 
   // SEPARATE NEW TAGS (WITHOUT ID) AND EXISTING TAGS (WITH ID)
