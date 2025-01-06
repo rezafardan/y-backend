@@ -25,7 +25,7 @@ const app = express();
 // MIDDLEWARE CROSS ORIGIN
 app.use(
   cors({
-    origin: process.env.HOST_URL,
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
