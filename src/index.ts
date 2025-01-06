@@ -16,11 +16,20 @@ import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
 import userRoutes from "./routes/user.routes";
 
+import dotenv from "dotenv";
+
+dotenv.config({ path: "../.env" });
+
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // MIDDLEWARE CROSS ORIGIN
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(
+  cors({
+    origin: process.env.HOST || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 // MIDDLEWARE HTTP COOKIES PARSER
 app.use(cookieParser());

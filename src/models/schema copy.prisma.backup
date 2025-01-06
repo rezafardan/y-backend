@@ -1,3 +1,4 @@
+// SCHEMA DEVELOPMENT
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["prismaSchemaFolder"]
