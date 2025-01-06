@@ -6,7 +6,7 @@
 !/public/assets/blog/content/
 !/public/assets/profile-image/
 
-# Ignore contents of the included folders
+# Ignore contents of included folders, but allow .gitkeep
 /public/assets/blog/*
 !/public/assets/blog/.gitkeep
 
@@ -16,11 +16,8 @@
 /public/assets/profile-image/*
 !/public/assets/profile-image/.gitkeep
 
-
-
+# General ignores
 node_modules
-# Keep environment variables out of version control
 .env
 .vercel
-
 dist
