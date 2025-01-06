@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "tsc && node dist/index.js",
-    "dev": "nodemon --exec ts-node src/index.ts"
+    "dev": "vercel dev",
+    "build": "tsc",
+    "start": "tsc && node dist/index.js"
   },
   "keywords": [],
   "author": "",

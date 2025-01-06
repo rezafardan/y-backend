@@ -18,15 +18,14 @@ import userRoutes from "./routes/user.routes";
 
 import dotenv from "dotenv";
 
-dotenv.config({ path: "../.env" });
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 // MIDDLEWARE CROSS ORIGIN
 app.use(
   cors({
-    origin: process.env.HOST || "http://localhost:3000",
+    origin: "https://y-dashboard-seven.vercel.app",
     credentials: true,
   })
 );
@@ -66,7 +65,3 @@ app.use("/api/tag", accessValidation, tagRoutes);
 // CREATE ADMINISTRATOR USER
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
 app.use("/api/administrator", administratorRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server running in PORT: ${PORT}`);
-});

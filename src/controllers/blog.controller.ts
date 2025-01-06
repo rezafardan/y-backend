@@ -39,7 +39,7 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
 
     const contentImageIds = extractContentImageIds(JSON.parse(content));
 
-    let publicationDate;
+    let publicationDate: any;
     try {
       publicationDate = validateBlogStatus(status, publishedAt);
     } catch (error: any) {
