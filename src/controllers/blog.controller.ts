@@ -215,12 +215,14 @@ const updateBlog = async (req: Request, res: Response) => {
     const { id } = req.params;
     const {
       title,
+      slug,
+      coverImageId,
       content,
+      categoryId,
+      tags,
       status,
       allowComment,
       publishedAt,
-      coverImageId,
-      tags,
     } = req.body;
 
     console.log(req.body);
@@ -232,20 +234,25 @@ const updateBlog = async (req: Request, res: Response) => {
     const result = await prisma.blog.update({
       where: { id },
       data: {
-        publishedAt,
-        status: status as BlogStatus,
-        allowComment,
         title,
+        slug,
+        coverImageId: coverImageId ? coverImageId : null,
         content: JSON.parse(content),
         contentImages: {
           connect: contentImageIds.map((id) => ({ id })),
         },
-        coverImageId: coverImageId ? coverImageId : null,
+
+        categoryId,
         tags: {
           connect: tagIds,
         },
+        status: status as BlogStatus,
+        allowComment,
+        publishedAt,
       },
     });
+
+    console.log("ini result", result);
 
     res
       .status(201)

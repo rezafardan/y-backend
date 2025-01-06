@@ -65,18 +65,22 @@ const deleteTag = async (req: Request, res: Response): Promise<any> => {
     const tagInUse = await prisma.tag.findUnique({
       where: { id },
       select: {
-        blog: {
+        blogs: {
           select: {
-            id: true,
-            title: true, // Mengambil judul blog yang terkait dengan tag
+            blogId: true,
+            blog: {
+              select: {
+                title: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (tagInUse && tagInUse.blog.length > 0) {
+    if (tagInUse && tagInUse.blogs.length > 0) {
       // Mengambil judul blog pertama yang menggunakan tag
-      const blogCount = tagInUse.blog.length;
+      const blogCount = tagInUse.blogs.length;
 
       return res.status(400).json({
         message: `This tag is still used in ${blogCount} blog${

@@ -31,6 +31,11 @@ app.use(express.json());
 // MIDDLEWARE LOG
 app.use(logRequest);
 
+// ROOT ROUTE WITHOUT VALIDATION
+app.get("/", (req, res) => {
+  res.send("Hello, World!");
+});
+
 // MIDDLEWARE ACCESS ASSET FILES
 app.use("/public", accessValidation, express.static(path.resolve("public")));
 

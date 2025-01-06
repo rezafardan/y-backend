@@ -12,8 +12,17 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     const { username, fullname, email, password, role } = req.body;
     const profileImage = req.file;
 
-    console.log(req.body);
-    console.log(req.file);
+    // DATABASE CONNECTION WITH ORM
+    const emailValidation = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (emailValidation) {
+      return res.status(500).json({
+        message:
+          "Error creating user, email alredy exist, please change your email",
+      });
+    }
 
     // HASHING PASSWORD
     const salt = await bcrypt.genSalt(10);
@@ -36,6 +45,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Create a user success" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: "Error creating user", error });
   }
 };
