@@ -73,10 +73,10 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      // secure: true,
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 15 minutes
+      secure: true, // Only true for production (HTTPS)
+      sameSite: "none", // "None" for cross-site cookies, "Lax" for same-site
+      maxAge: 24 * 60 * 60 * 1000, // 1 day (in milliseconds)
+      domain: "y-dashboard-delta.vercel.app",
     });
 
     return res.status(200).json({
@@ -89,6 +89,7 @@ const Login = async (req: Request, res: Response): Promise<any> => {
       },
     });
   } catch (error) {
+    console.log(error);
     return res
       .status(500)
       .json({ message: "Error when trying to login", error });
@@ -100,8 +101,8 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
     // Clear cookies
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
     });
 
     return res.status(200).json({ message: "Logout successfully" });
