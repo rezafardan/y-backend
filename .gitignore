@@ -1,11 +1,25 @@
+# Ignore everything in public/assets
+/public/assets/*
+
+# Include specific folders
+!/public/assets/blog/
+!/public/assets/blog/content/
+!/public/assets/profile-image/
+
+# Ignore contents of the included folders
+/public/assets/blog/*
+!/public/assets/blog/.gitkeep
+
+/public/assets/blog/content/*
+!/public/assets/blog/content/.gitkeep
+
+/public/assets/profile-image/*
+!/public/assets/profile-image/.gitkeep
+
+
 node_modules
 # Keep environment variables out of version control
 .env
-/public/assets/*
-/public/assets/blog/*
-/public/assets/profile-image/*
-!/public/assets/blog/
-!/public/assets/profile-image/
 .vercel
 
 dist
