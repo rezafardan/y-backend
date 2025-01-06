@@ -25,7 +25,7 @@ const app = express();
 // MIDDLEWARE CROSS ORIGIN
 app.use(
   cors({
-    origin: "https://y-dashboard-seven.vercel.app",
+    origin: process.env.HOST_URL,
     credentials: true,
   })
 );
@@ -65,3 +65,5 @@ app.use("/api/tag", accessValidation, tagRoutes);
 // CREATE ADMINISTRATOR USER
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
 app.use("/api/administrator", administratorRoutes);
+
+export default app;

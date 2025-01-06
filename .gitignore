@@ -2,4 +2,10 @@ node_modules
 # Keep environment variables out of version control
 .env
 /public/assets/*
+/public/assets/blog/*
+/public/assets/profile-image/*
+!/public/assets/blog/
+!/public/assets/profile-image/
 .vercel
+
+.dist
