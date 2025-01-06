@@ -8,4 +8,4 @@ node_modules
 !/public/assets/profile-image/
 .vercel
 
-.dist
+dist
