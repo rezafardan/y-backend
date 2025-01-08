@@ -51,13 +51,7 @@ router.get(
 router.patch(
   "/:id",
   authorizeRole(["ADMINISTRATOR"]),
-  (req, res, next) => {
-    console.log("File:", req.file); // Cek file yang diterima
-    console.log("Body:", req.body); // Cek data lainnya
-    next();
-  },
   uploadProfile.single("profileImage"),
-
   userController.updateUser
 );
 

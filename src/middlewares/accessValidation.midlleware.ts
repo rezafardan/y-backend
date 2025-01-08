@@ -9,7 +9,9 @@ const accessValidation = (req: Request, res: Response, next: NextFunction) => {
   const accessToken = req.cookies?.accessToken;
 
   if (!accessToken) {
-    res.status(401).json({ message: "Authentication token is missing" });
+    res
+      .status(401)
+      .json({ redirect: "/login", message: "Authentication token is missing" });
     return;
   }
 
@@ -31,7 +33,7 @@ const accessValidation = (req: Request, res: Response, next: NextFunction) => {
 
     next();
   } catch (error) {
-    res.status(403).json({ message: "Invalid token" });
+    res.status(403).json({ redirect: "/login", message: "Invalid token" });
     return;
   }
 };

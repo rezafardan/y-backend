@@ -5,14 +5,113 @@ import fs from "fs";
 // ORM
 import prisma from "../models/prisma";
 
-// CREATE
+//  GET USER DATA THAT LOGGED IN FOR VIEW USER PROFILE ACTION
+const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
+  try {
+    // GET USER ID
+    const userId = (req.user as { id: string }).id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // DATABASE CONNECTION WITH ORM
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        fullname: true,
+        email: true,
+        profileImage: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ data: user, message: "Get data user logged in success!" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+// PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
+const updateLoggedInUser = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    // GET USER ID
+    const userId = (req.user as { id: string }).id;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // GET BODY
+    const { fullname, email, password, role } = req.body;
+    const profileImage = req.file;
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // NEW DATA AND EXISTING DATA
+    const updatedData: any = {
+      fullname: fullname || existingUser.fullname,
+      email: email || existingUser.email,
+      role: role || existingUser.role,
+      profileImage: profileImage?.path || existingUser.profileImage,
+    };
+
+    // NEW PASSWORD CREATE HASHING
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      updatedData.passwordHash = await bcrypt.hash(password, salt);
+    }
+
+    // DELETE PROFILE IMAGE IF THERE ARE PROFILE IMAGE IN DATABASE
+    if (profileImage && existingUser.profileImage) {
+      try {
+        await fs.promises.unlink(existingUser.profileImage);
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: "Error deleting profile image", error });
+      }
+    }
+
+    // DATABASE CONNECTION WITH ORM
+    const result = await prisma.user.update({
+      where: { id: userId },
+      data: updatedData,
+    });
+
+    res
+      .status(200)
+      .json({ data: result, message: "User profile updated successfully!" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+// CREATE NEW USER
 const createNewUser = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
     const { username, fullname, email, password, role } = req.body;
     const profileImage = req.file;
 
-    // DATABASE CONNECTION WITH ORM
+    // CHECK DUPLICATE EMAIL
     const emailValidation = await prisma.user.findUnique({
       where: { email },
     });
@@ -20,7 +119,7 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
     if (emailValidation) {
       return res.status(500).json({
         message:
-          "Error creating user, email alredy exist, please change your email",
+          "Error creating user, email alredy exist, please change your email!",
       });
     }
 
@@ -43,9 +142,8 @@ const createNewUser = async (req: Request, res: Response): Promise<any> => {
 
     return res
       .status(201)
-      .json({ data: result, message: "Create a user success" });
+      .json({ data: result, message: "Create a user success!" });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({ message: "Error creating user", error });
   }
 };
@@ -70,7 +168,7 @@ const getAllUsers = async (req: Request, res: Response): Promise<any> => {
 
     res.status(200).json({ data: result, messsage: "Get all users success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error when get users data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -79,7 +177,6 @@ const getUserById = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
-    console.log(id);
 
     // DATABASE CONNECTION WITH ORM
     const result = await prisma.user.findUnique({
@@ -98,9 +195,9 @@ const getUserById = async (req: Request, res: Response) => {
     });
     res
       .status(200)
-      .json({ data: result, message: `Get user by id: ${id} success` });
+      .json({ data: result, message: `Get user by id: ${id} success!` });
   } catch (error) {
-    res.status(500).json({ message: "Error when get user data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -115,6 +212,7 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
     const profileImage = req.file;
 
     const existingUser = await prisma.user.findUnique({ where: { id } });
+
     if (!existingUser) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -124,13 +222,24 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
       email: email || existingUser.email,
       role: role || existingUser.role,
       profileImage: profileImage?.path || existingUser.profileImage,
-      passwordHash: existingUser.passwordHash, // Default old password
+      passwordHash: existingUser.passwordHash,
     };
 
     // HASHING PASSWORD
     if (password) {
       const salt = await bcrypt.genSalt(10);
       updatedData.passwordHash = await bcrypt.hash(password, salt);
+    }
+
+    // DELETE PROFILE IMAGE IF THERE ARE PROFILE IMAGE IN DATABASE
+    if (profileImage && existingUser.profileImage) {
+      try {
+        await fs.promises.unlink(existingUser.profileImage);
+      } catch (error) {
+        return res
+          .status(500)
+          .json({ message: "Error deleting profile image", error });
+      }
     }
 
     // DATABASE CONNECTION WITH ORM
@@ -143,8 +252,7 @@ const updateUser = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Updating user data success!" });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error updating user data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -177,9 +285,7 @@ const softDeleteUser = async (req: Request, res: Response) => {
       message: "User has been soft deleted successfully!",
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error when soft deleting user data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -212,7 +318,7 @@ const restoreUserSoftDelete = async (req: Request, res: Response) => {
       message: "User has been restore successfully!",
     });
   } catch (error) {
-    res.status(500).json({ message: "Error when restoring user data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -256,12 +362,11 @@ const deleteUserPermanent = async (
       .status(200)
       .json({ data: result, message: "Deleting user data success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting user data", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
 // CHECK USERNAME FOR CREATE A NEW USER TO AVOID DUPLICATE USER DATA
-
 const checkUsername = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -282,97 +387,9 @@ const checkUsername = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-//  GET USER DATA THAT LOGGED IN FOR VIEW  USER PROFILE ACTION
-
-const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {
-  try {
-    // Ambil id dari req.user yang telah diverifikasi oleh accessValidation
-    const userId = (req.user as { id: string }).id;
-
-    if (!userId) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    // DATABASE CONNECTION WITH ORM
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        username: true,
-        fullname: true,
-        email: true,
-        profileImage: true,
-        role: true,
-      },
-    });
-
-    // Jika user tidak ditemukan
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Kirim response dengan data user
-    return res
-      .status(200)
-      .json({ data: user, message: "Get data user logged in success!" });
-  } catch (error) {
-    console.error("Error getting user:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
-const updateLoggedInUser = async (
-  req: Request,
-  res: Response
-): Promise<any> => {
-  try {
-    const userId = (req.user as { id: string }).id;
-
-    if (!userId) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    const { fullname, email, password, role } = req.body;
-    const profileImage = req.file;
-
-    // Mendapatkan data user yang ada
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    if (!existingUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const updatedData: any = {
-      fullname: fullname || existingUser.fullname,
-      email: email || existingUser.email,
-      role: role || existingUser.role,
-      profileImage: profileImage?.path || existingUser.profileImage,
-    };
-
-    // Jika password ada, hash password baru
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      updatedData.passwordHash = await bcrypt.hash(password, salt);
-    }
-
-    // Update user di database
-    const result = await prisma.user.update({
-      where: { id: userId },
-      data: updatedData,
-    });
-
-    res
-      .status(200)
-      .json({ data: result, message: "User profile updated successfully!" });
-  } catch (error) {
-    console.error("Error updating user:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 export default {
+  getLoggedInUser,
+  updateLoggedInUser,
   createNewUser,
   getAllUsers,
   getUserById,
@@ -381,6 +398,4 @@ export default {
   deleteUserPermanent,
   restoreUserSoftDelete,
   checkUsername,
-  getLoggedInUser,
-  updateLoggedInUser,
 };

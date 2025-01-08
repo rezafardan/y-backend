@@ -48,11 +48,18 @@ model Blog {
   id                      String             @id @default(cuid())
   title                   String             @db.VarChar(255)
   slug                    String             @unique
+
   coverImageId            String?            @map("cover_image_id")
   coverImage              Media?             @relation("BlogCoverImage", fields: [coverImageId], references: [id])
+
   content                 Json 
+  contentImages           BlogContentImage[]
+
   categoryId              String             @map("category_id")
   category                Category           @relation(fields: [categoryId], references: [id])
+
+  tags                    BlogTag[]
+
   publishedAt             DateTime?          @map("published_at")
   status                  BlogStatus         @default(DRAFT)
   allowComment            Boolean            @map("allow_comment")
@@ -60,12 +67,13 @@ model Blog {
   likeCount               Int                @default(0) @map("like_count")
   createdAt               DateTime           @default(now()) @map("created_at")
   updatedAt               DateTime           @updatedAt @map("edited_at")
+
   userId                  String             @map("user_id")
   user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   isUserActive            Boolean?           @default(true) @map("is_user_active")
 
-  contentImages           BlogContentImage[]
-  tags                    BlogTag[]
+  
+
   comments                Comment[]
 
   @@index([coverImageId], map: "blog_cover_image_id_fkey")
@@ -77,9 +85,11 @@ model Blog {
 model BlogContentImage {
   id        String   @id @default(cuid())
   blogId    String   @map("blog_id")
-  mediaId   String   @map("media_id")
   blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  
+  mediaId   String   @map("media_id")
   media     Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  
   createdAt DateTime @default(now()) @map("created_at")
 
   @@unique([blogId, mediaId])
@@ -88,10 +98,14 @@ model BlogContentImage {
 
 model BlogTag {
   id        String   @id @default(cuid())
+
   blogId    String   @map("blog_id")
-  tagId     String   @map("tag_id")
   blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  
+
+  tagId     String   @map("tag_id")
   tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
   createdAt DateTime @default(now()) @map("created_at")
 
   @@unique([blogId, tagId])

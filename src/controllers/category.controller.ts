@@ -1,23 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../models/prisma";
 
-// === BLOG SCHEMA ===
-// id                  String             @id @default(cuid())
-// name                String             @db.VarChar(255)
-// description         String             @db.VarChar(255)
-// createdAt           DateTime           @default(now()) @map("created_at")
-// updatedAt           DateTime           @updatedAt @map("updated_at")
-// deleteAt            DateTime?          @map("delete_at")
-// userId              String             @map("user_id")
-// isUserActive        Boolean?           @map("is_user_active")
-
-// CREATE
+// CREATE NEW CATEGORY
 const createNewCategory = async (req: Request, res: Response): Promise<any> => {
   try {
+    // GET USER ID
     const userId = (req.user as { id: string }).id;
+
     // GET BODY
     const { name, description } = req.body;
 
+    // CHECK DUPLICATION CATEGORY NAME
     const existingCategory = await prisma.category.findFirst({
       where: { name: name },
     });
@@ -25,11 +18,11 @@ const createNewCategory = async (req: Request, res: Response): Promise<any> => {
     if (existingCategory) {
       return res.status(404).json({
         message:
-          "The category is alredy exist, please change the category name",
+          "Category with this name already exists. Please choose another name.",
       });
     }
 
-    // DATABASE CONNECTION
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.category.create({
       data: {
         name,
@@ -40,16 +33,16 @@ const createNewCategory = async (req: Request, res: Response): Promise<any> => {
 
     res
       .status(201)
-      .json({ data: result, message: "Create a category success!" });
+      .json({ data: result, message: "Category processed successfully!" });
   } catch (error) {
-    res.status(500).json({ message: "Error creating category", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
-// READ
+// GET ALL CATEGORY DATA
 const getAllCategories = async (req: Request, res: Response) => {
   try {
-    // DATABASE CONNECTION
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.category.findMany({
       select: {
         id: true,
@@ -73,19 +66,17 @@ const getAllCategories = async (req: Request, res: Response) => {
       .status(200)
       .json({ data: result, message: "Get all categories success!" });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error when fetching categories data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
-// READ BY ID
+// GET CATEGORY BY ID
 const getCategoryByID = async (req: Request, res: Response) => {
   try {
     // GET ID
     const { id } = req.params;
 
-    // DATABASE CONNECTION
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.category.findUnique({
       where: { id },
       select: {
@@ -109,20 +100,30 @@ const getCategoryByID = async (req: Request, res: Response) => {
       .status(200)
       .json({ data: result, message: `Get category by id: ${id} success` });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error when fetching categories data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
-// UPDATE
-const updateCategory = async (req: Request, res: Response) => {
+// UPDATE CATEGORY DATA BY ID
+const updateCategory = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET ID
     const { id } = req.params;
 
     // GET BODY
     const { name, description } = req.body;
+
+    // CHECK DUPLICATION CATEGORY NAME
+    const existingCategory = await prisma.category.findFirst({
+      where: { name: name },
+    });
+
+    if (existingCategory) {
+      return res.status(404).json({
+        message:
+          "Category with this name already exists. Please choose another name.",
+      });
+    }
 
     // DATABASE CONNECTION
     const result = await prisma.category.update({
@@ -137,30 +138,31 @@ const updateCategory = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Updating category data success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error updating category data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
-// DELETE
+// DELETE CATEGORY DATA
 const deleteCategory = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET UD
     const { id } = req.params;
-    // Cek apakah kategori masih digunakan oleh blog
+
+    // CHECK IF CATEGORY STILL USED BY BLOG
     const categoryInUse = await prisma.category.findUnique({
       where: { id },
       select: {
         Blogs: {
           select: {
             id: true,
-            title: true, // Mengambil judul blog yang terkait dengan kategori
+            title: true,
           },
         },
       },
     });
 
     if (categoryInUse && categoryInUse.Blogs.length > 0) {
-      // Mengambil jumlah total blog yang menggunakan tag
+      // TOTAL BLOGS
       const blogCount = categoryInUse.Blogs.length;
 
       return res.status(400).json({
@@ -170,7 +172,7 @@ const deleteCategory = async (req: Request, res: Response): Promise<any> => {
       });
     }
 
-    // Jika kategori tidak digunakan, lakukan penghapusan
+    // DATABASE CONNECTION WITH ORM
     const result = await prisma.category.delete({
       where: { id },
     });
@@ -179,20 +181,20 @@ const deleteCategory = async (req: Request, res: Response): Promise<any> => {
       .status(201)
       .json({ data: result, message: "Deleting category data success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting category data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
 const getCategoriesWithBlogCount = async (req: Request, res: Response) => {
   try {
-    // Mengambil data kategori dengan jumlah blog per kategori
+    // GET CATEGORY DATA WITH TOTAL BLOGS PER CATEGORY
     const categories = await prisma.category.findMany({
       select: {
         id: true,
         name: true,
         description: true,
         _count: {
-          select: { Blogs: true }, // Menghitung jumlah blog untuk tiap kategori
+          select: { Blogs: true },
         },
       },
     });
@@ -202,9 +204,7 @@ const getCategoriesWithBlogCount = async (req: Request, res: Response) => {
       message: "Fetched categories with blog count successfully",
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching categories with blog count", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 

@@ -16,11 +16,11 @@ import categoryRoutes from "./routes/category.routes";
 import tagRoutes from "./routes/tag.routes";
 import userRoutes from "./routes/user.routes";
 
+// ENV
 import dotenv from "dotenv";
 
-dotenv.config();
-
 const app = express();
+dotenv.config();
 
 // MIDDLEWARE CROSS ORIGIN
 app.use(
@@ -30,19 +30,21 @@ app.use(
   })
 );
 
-// MIDDLEWARE HTTP COOKIES PARSER
-app.use(cookieParser());
-
-// MIDDLEWARE PARSING JSON
-app.use(express.json());
+app.set("trust proxy", true);
 
 // MIDDLEWARE LOG
 app.use(logRequest);
 
 // ROOT ROUTE WITHOUT VALIDATION
 app.get("/", (req, res) => {
-  res.send("Hello, World!");
+  res.send("Express works!");
 });
+
+// MIDDLEWARE PARSING JSON
+app.use(express.json());
+
+// MIDDLEWARE HTTP COOKIES PARSER
+app.use(cookieParser());
 
 // MIDDLEWARE ACCESS ASSET FILES
 app.use("/public", accessValidation, express.static(path.resolve("public")));
@@ -53,17 +55,19 @@ app.use("/api", authRoutes);
 // ROUTE USER
 app.use("/api/user", accessValidation, userRoutes);
 
-// ROUTE BLOG
-app.use("/api/blog", accessValidation, blogRoutes);
+// ROUTE TAG
+app.use("/api/tag", accessValidation, tagRoutes);
 
 // ROUTE CATEGORY
 app.use("/api/category", accessValidation, categoryRoutes);
 
-// ROUTE TAG
-app.use("/api/tag", accessValidation, tagRoutes);
+// ROUTE BLOG
+app.use("/api/blog", accessValidation, blogRoutes);
 
 // CREATE ADMINISTRATOR USER
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
 app.use("/api/administrator", administratorRoutes);
+
+// app.listen("3001");
 
 export default app;

@@ -12,8 +12,6 @@ const createStorage = (folder: string) => {
       const fileExtension = path.extname(file.originalname);
       const fileName = `${randomId}${fileExtension}`;
 
-      console.log(file);
-
       callback(null, fileName);
     },
   });
