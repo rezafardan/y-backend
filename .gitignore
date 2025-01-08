@@ -1,20 +1,20 @@
-# Ignore everything in public/assets
-/public/assets/*
+# # Ignore everything in public/assets
+# /public/assets/*
 
-# Include specific folders
-!/public/assets/blog/
-!/public/assets/blog/content/
-!/public/assets/profile-image/
+# # Include specific folders
+# !/public/assets/blog/
+# !/public/assets/blog/content/
+# !/public/assets/profile-image/
 
-# Ignore contents of included folders, but allow .gitkeep
-/public/assets/blog/*
-!/public/assets/blog/.gitkeep
+# # Ignore contents of included folders, but allow .gitkeep
+# /public/assets/blog/*
+# !/public/assets/blog/.gitkeep
 
-/public/assets/blog/content/*
-!/public/assets/blog/content/.gitkeep
+# /public/assets/blog/content/*
+# !/public/assets/blog/content/.gitkeep
 
-/public/assets/profile-image/*
-!/public/assets/profile-image/.gitkeep
+# /public/assets/profile-image/*
+# !/public/assets/profile-image/.gitkeep
 
 # General ignores
 node_modules
