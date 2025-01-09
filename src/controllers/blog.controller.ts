@@ -179,9 +179,7 @@ const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
       .status(200)
       .json({ data: result, message: "Get all blogs success!" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error when fetching blogs data", error });
+    return res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
@@ -231,9 +229,7 @@ const getBlogById = async (req: Request, res: Response): Promise<any> => {
       .status(200)
       .json({ data: result, message: `Get blog by id: ${id} success` });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error when fetching blog data", error });
+    return res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
@@ -301,7 +297,7 @@ const updateBlog = async (req: Request, res: Response) => {
       .status(201)
       .json({ data: result, message: "Updating blog data success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error updating blog data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 
@@ -316,7 +312,7 @@ const deleteBlog = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: "Deleting blog data success!" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting blog data", error });
+    res.status(500).json({ message: "Internal server error.", error });
   }
 };
 

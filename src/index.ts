@@ -68,6 +68,6 @@ app.use("/api/blog", accessValidation, blogRoutes);
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
 app.use("/api/administrator", administratorRoutes);
 
-// app.listen("3001");
+app.listen("3001");
 
-export default app;
+// export default app;

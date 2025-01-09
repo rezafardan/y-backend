@@ -18,4 +18,6 @@ router.post(
   authController.ResetPassword
 );
 
+router.get("/auth/check", authController.authCheck);
+
 export default router;

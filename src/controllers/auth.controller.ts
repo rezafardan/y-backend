@@ -146,4 +146,61 @@ const ResetPassword = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { Login, Logout, ResetPassword };
+const authCheck = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const accessToken = req.cookies.accessToken;
+
+    if (!accessToken) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+
+    if (!ACCESS_TOKEN_SECRET) {
+      return res.status(500).json({
+        message: "Server error: please contact an administrator",
+      });
+    }
+
+    const decoded = jwt.verify(accessToken, ACCESS_TOKEN_SECRET) as {
+      id: string;
+      username: string;
+      role: string;
+      deletedAt: Date | null;
+    };
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        profileImage: true,
+        deletedAt: true,
+      },
+    });
+
+    if (!user || user.deletedAt !== null) {
+      return res.status(401).json({
+        message: "User is inactive or does not exist",
+      });
+    }
+
+    return res.status(200).json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        profileImage: user.profileImage,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error checking authentication status",
+      error,
+    });
+  }
+};
+
+export default { Login, Logout, ResetPassword, authCheck };
