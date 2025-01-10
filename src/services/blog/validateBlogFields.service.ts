@@ -1,12 +1,12 @@
 // FUNCTION TO VALIDATING BLOG VALUE
-
 import prisma from "../../models/prisma";
 
 export const validateBlogFields = async (
   body: any,
-  status: string
+  status: string,
+  id?: string
 ): Promise<any> => {
-  // REQUIRE DATA FOR PUBLISH
+  // REQUIRE DATA
   const requiredFields: any = {
     DRAFT: ["title", "slug", "content", "categoryId"],
     PUBLISH: [
@@ -58,12 +58,12 @@ export const validateBlogFields = async (
     throw new Error("Slug cannot exceed 255 characters.");
   }
 
-  // VALIDATE DUPLICATE SLUG
+  // VALIDATE DUPLICATE SLUG (CREATE & UPDATE)
   const existingSlug = await prisma.blog.findUnique({
     where: { slug: body.slug },
   });
 
-  if (existingSlug) {
+  if (existingSlug && existingSlug.id !== id) {
     throw new Error("Slug must be unique. The provided slug already exists.");
   }
 

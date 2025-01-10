@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
-
 // ORM
 import prisma from "../models/prisma";
+
+import { Request, Response } from "express";
 
 //  CREATE NEW TAG
 const createNewTag = async (req: Request, res: Response): Promise<any> => {

@@ -1,9 +1,11 @@
-import { Request, Response } from "express";
-import bcrypt from "bcrypt";
-import fs from "fs";
-
 // ORM
 import prisma from "../models/prisma";
+
+import bcrypt from "bcrypt";
+import { Request, Response } from "express";
+
+// FILE SYSTEM
+import fs from "fs";
 
 //  GET USER DATA THAT LOGGED IN FOR VIEW USER PROFILE ACTION
 const getLoggedInUser = async (req: Request, res: Response): Promise<any> => {

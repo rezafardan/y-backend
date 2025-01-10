@@ -1,11 +1,19 @@
 import express from "express";
-import { authorizeRole } from "../middlewares/authorizeRole.middleware";
-import blogController from "../controllers/blog.controller";
-import { uploadCover, uploadContent } from "../middlewares/upload.middleware";
 
+// CONTROLLER
+import blogController from "../controllers/blog.controller";
+
+// MIDDLEWARE
+import { authorizeRole } from "../middlewares/authorizeRole.middleware";
+import { uploadCover, uploadContent } from "../middlewares/upload.middleware";
+import compressImage from "../middlewares/imageCompression.middleware";
+
+// THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express.Router();
 
-// CREATE
+// CREATE A NEW BLOG
+//   POST MULTIPART/FORM-DATA
+//   http://hostname/api/blog
 router.post(
   "/",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
@@ -13,42 +21,51 @@ router.post(
 );
 
 // POST IMAGE CONTENT
+//   http://hostname/api/blog/content
 router.post(
-  "/content",
+  "/contentimage",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   uploadContent.single("contentimage"),
+  compressImage("blog/content"),
   blogController.uploadBlogImage
 );
 
+// POST IMAGE COVER
+//   http://hostname/api/blog/coverimage
 router.post(
   "/coverimage",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   uploadCover.single("coverimage"),
+  compressImage("blog"),
   blogController.uploadBlogImage
 );
 
-// READ
+// READ ALL BLOG DATA
+//   http://hostname/api/blog
 router.get(
   "/",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   blogController.getAllBlogs
 );
 
-// READ BY ID
+// READ BLOG DATA BY ID
+//   http://hostname/api/blog/ID?
 router.get(
   "/:id",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
   blogController.getBlogById
 );
 
-// UPDATE
+// UPDATE BLOG DATA BY ID
+//   http://hostname/api/blog/ID?
 router.patch(
   "/:id",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),
   blogController.updateBlog
 );
 
-// DELETE
+// DELETE BLOG DATA BY ID
+//   http://hostname/api/blog/ID?
 router.delete(
   "/:id",
   authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR"]),

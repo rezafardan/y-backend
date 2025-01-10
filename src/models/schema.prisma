@@ -1,4 +1,4 @@
-// SCHEMA MIGRATE TO CLOUD
+// SCHEMA PRODUCTION TO AIVEN.IO CLOUD
 
 generator client {
   provider        = "prisma-client-js"

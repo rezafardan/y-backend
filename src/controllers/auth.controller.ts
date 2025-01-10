@@ -1,7 +1,9 @@
-import { Request, Response } from "express";
+// ORM
+import prisma from "../models/prisma";
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma from "../models/prisma";
+import { Request, Response } from "express";
 
 const Login = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -110,42 +112,6 @@ const Logout = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-const ResetPassword = async (req: Request, res: Response): Promise<any> => {
-  try {
-    const { username, newPassword } = req.body;
-
-    // Validasi input
-    if (!username || !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "Username and new password are required" });
-    }
-
-    // Cari pengguna berdasarkan username
-    const user = await prisma.user.findUnique({ where: { username } });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Hash password baru
-    const passwordHash = await bcrypt.hash(newPassword, 10);
-
-    // Update password di database
-    await prisma.user.update({
-      where: { username },
-      data: { passwordHash },
-    });
-
-    return res
-      .status(200)
-      .json({ message: "Password has been updated successfully" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Error when trying to reset password", error });
-  }
-};
-
 const authCheck = async (req: Request, res: Response): Promise<any> => {
   try {
     const accessToken = req.cookies.accessToken;
@@ -203,4 +169,4 @@ const authCheck = async (req: Request, res: Response): Promise<any> => {
   }
 };
 
-export default { Login, Logout, ResetPassword, authCheck };
+export default { Login, Logout, authCheck };

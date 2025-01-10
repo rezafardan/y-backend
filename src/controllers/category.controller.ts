@@ -1,5 +1,7 @@
-import { Request, Response, NextFunction } from "express";
+// ORN
 import prisma from "../models/prisma";
+
+import { Request, Response } from "express";
 
 // CREATE NEW CATEGORY
 const createNewCategory = async (req: Request, res: Response): Promise<any> => {

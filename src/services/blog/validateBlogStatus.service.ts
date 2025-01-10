@@ -1,6 +1,7 @@
+// MODELS
 import { BlogStatus } from "@prisma/client";
 
-export const validateBlogStatus = (
+export const validateBlogStatusForPulication = (
   status: BlogStatus,
   publishedAt: string | number | Date
 ) => {

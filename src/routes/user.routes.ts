@@ -6,13 +6,13 @@ import userController from "../controllers/user.controller";
 // MIDDLEWARE
 import { authorizeRole } from "../middlewares/authorizeRole.middleware";
 import { uploadProfile } from "../middlewares/upload.middleware";
+import compressImage from "../middlewares/imageCompression.middleware";
 
 // THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express.Router();
 
 // CHECK USER DATA BUT ONLY DATA USER LOGGED IN
 //   http://hostname/api/user/me
-
 router.get("/me", userController.getLoggedInUser);
 
 // UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
@@ -20,6 +20,7 @@ router.get("/me", userController.getLoggedInUser);
 router.patch(
   "/me",
   uploadProfile.single("profileImage"),
+  compressImage("profile-image"),
   userController.updateLoggedInUser
 );
 
@@ -30,12 +31,12 @@ router.post(
   "/",
   authorizeRole(["ADMINISTRATOR"]),
   uploadProfile.single("profileImage"),
+  compressImage("profile-image"),
   userController.createNewUser
 );
 
 // READ ALL USER DATA
 //   http://hostname/api/user
-
 router.get("/", authorizeRole(["ADMINISTRATOR"]), userController.getAllUsers);
 
 // READ USER DATA BY ID
@@ -65,7 +66,6 @@ router.patch(
 
 // RESTORE USER SOFT DELETE BY ID
 //   http://hostname/api/user/ID?
-
 router.patch(
   "/restore/:id",
   authorizeRole(["ADMINISTRATOR"]),

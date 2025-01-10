@@ -1,6 +1,8 @@
-import { Request, Response } from "express";
+// ORM
 import prisma from "../models/prisma";
+
 import bcrypt from "bcrypt";
+import { Request, Response } from "express";
 
 // CREATE ADMINISTRATOR USER
 const createAdministrator = async (

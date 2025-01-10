@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 
+// LOGGER WINSTON
+import logger from "../logs/logger";
+
 const logRequest = (req: Request, res: Response, next: NextFunction) => {
-  console.log(`Log request terjadi di PATH: ${req.path}`);
+  logger.info(`Request: ${req.method} ${req.path} - IP: ${req.ip}`);
   next();
 };
 

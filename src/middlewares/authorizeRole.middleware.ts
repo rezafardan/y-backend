@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
+
+// MODELS
 import { UserRole } from "@prisma/client";
 
 export const authorizeRole = (roles: UserRole[]): RequestHandler => {
