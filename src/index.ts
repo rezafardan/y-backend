@@ -27,8 +27,9 @@ import dotenv from "dotenv";
 const app = express();
 dotenv.config();
 
+// ONLY DISABLE ON VERCEL PRODUCTION
 // CREATE NEW FOLDERS FOR ASSETS
-initializeFolders();
+// initializeFolders();
 
 // MIDDLEWARE CROSS ORIGIN
 app.use(

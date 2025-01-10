@@ -11,8 +11,9 @@ const logger = createLogger({
   ),
   transports: [
     new transports.Console(),
-    new transports.File({ filename: "logs/error.log", level: "error" }),
-    new transports.File({ filename: "logs/all-log.log" }),
+    // ONLY DISABLE ON VERCEL PRODUCTION
+    // new transports.File({ filename: "logs/error.log", level: "error" }),
+    // new transports.File({ filename: "logs/all-log.log" }),
   ],
 });
 
