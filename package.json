@@ -1,7 +1,12 @@
 {
   "name": "express-typescript",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend untuk CMS Dasboard dan Blogpage",
+  "licenses": [
+    {
+      "type": "UNLICENSED"
+    }
+  ],
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
