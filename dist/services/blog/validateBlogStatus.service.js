@@ -1,25 +1,38 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = validateBlogFields;
-function validateBlogFields(reqBody, status) {
-    const requiredFieldsForPublish = [
-        "title",
-        "coverImageId",
-        "content",
-        "categoryId",
-        "tags",
-    ];
-    // Jika statusnya "DRAFT", izinkan content kosong
-    if (status !== "DRAFT" && !reqBody.content) {
-        throw new Error("Content cannot be empty");
+exports.validateBlogStatusForPulication = void 0;
+const validateBlogStatusForPulication = (status, publishedAt) => {
+    // VALIDATION STATUS
+    if (!["DRAFT", "PUBLISH", "SCHEDULE"].includes(status)) {
+        throw new Error("Invalid blog status.");
     }
-    // Validasi field yang diperlukan selain "DRAFT"
-    const missingFields = requiredFieldsForPublish.filter((field) => status !== "DRAFT" && !reqBody[field]);
-    if (missingFields.length > 0) {
-        throw new Error(`Missing required fields for ${status}: ${missingFields.join(", ")}`);
+    const now = new Date();
+    if (status === "PUBLISH" || status === "SCHEDULE") {
+        if (!publishedAt) {
+            throw new Error("Published or scheduled blogs must have a publication date.");
+        }
+        const publicationDate = new Date(publishedAt);
+        // RULE VALIDATION: DATE CANNOT BE MORE THAN 30 DAYS OLD
+        const maxBackDate = new Date();
+        maxBackDate.setDate(now.getDate() - 30);
+        if (publicationDate < maxBackDate) {
+            throw new Error(`The publication date cannot be earlier than ${maxBackDate.toISOString().split("T")[0]}.`);
+        }
+        return publicationDate;
     }
-    // Pastikan publishedAt ada untuk status "SCHEDULE"
-    if (status === "SCHEDULE" && !reqBody.publishedAt) {
-        throw new Error("Published date is required for SCHEDULE status.");
+    // FOR DRAFT STATUS
+    if (status === "DRAFT") {
+        if (publishedAt) {
+            const publicationDate = new Date(publishedAt);
+            // RULE VALIDATION: DATE CANNOT BE MORE THAN 30 DAYS OLD
+            const maxBackDate = new Date();
+            maxBackDate.setDate(now.getDate() - 30);
+            if (publicationDate < maxBackDate) {
+                throw new Error(`The publication date for drafts cannot be earlier than ${maxBackDate.toISOString().split("T")[0]}.`);
+            }
+            return publicationDate;
+        }
     }
-}
+    return null;
+};
+exports.validateBlogStatusForPulication = validateBlogStatusForPulication;

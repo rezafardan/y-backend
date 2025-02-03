@@ -12,9 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// ORM
+const prisma_1 = __importDefault(require("../models/prisma"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const prisma_1 = __importDefault(require("../models/prisma"));
 const Login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // GET BODY
@@ -72,12 +73,12 @@ const Login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            // secure: true,
-            sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000, // 15 minutes
+            secure: process.env.NODE_ENV === "production", // Only true for production (HTTPS)
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "None" for cross-site cookies, "Lax" for same-site
+            maxAge: 24 * 60 * 60 * 1000, // 1 day (in milliseconds)
         });
         return res.status(200).json({
+            redirect: "/",
             message: `Login success, Welcome ${result.username}`,
             user: {
                 id: result.id,
@@ -99,7 +100,7 @@ const Logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.clearCookie("accessToken", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         });
         return res.status(200).json({ message: "Logout successfully" });
     }
@@ -107,35 +108,49 @@ const Logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         return res.status(500).json({ message: "Error during logout", error });
     }
 });
-const ResetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const authCheck = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { username, newPassword } = req.body;
-        // Validasi input
-        if (!username || !newPassword) {
-            return res
-                .status(400)
-                .json({ message: "Username and new password are required" });
+        const accessToken = req.cookies.accessToken;
+        if (!accessToken) {
+            return res.status(401).json({ message: "No token provided" });
         }
-        // Cari pengguna berdasarkan username
-        const user = yield prisma_1.default.user.findUnique({ where: { username } });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
+        const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+        if (!ACCESS_TOKEN_SECRET) {
+            return res.status(500).json({
+                message: "Server error: please contact an administrator",
+            });
         }
-        // Hash password baru
-        const passwordHash = yield bcrypt_1.default.hash(newPassword, 10);
-        // Update password di database
-        yield prisma_1.default.user.update({
-            where: { username },
-            data: { passwordHash },
+        const decoded = jsonwebtoken_1.default.verify(accessToken, ACCESS_TOKEN_SECRET);
+        const user = yield prisma_1.default.user.findUnique({
+            where: { id: decoded.id },
+            select: {
+                id: true,
+                username: true,
+                role: true,
+                profileImage: true,
+                deletedAt: true,
+            },
         });
-        return res
-            .status(200)
-            .json({ message: "Password has been updated successfully" });
+        if (!user || user.deletedAt !== null) {
+            return res.status(401).json({
+                message: "User is inactive or does not exist",
+            });
+        }
+        return res.status(200).json({
+            authenticated: true,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                profileImage: user.profileImage,
+            },
+        });
     }
     catch (error) {
-        return res
-            .status(500)
-            .json({ message: "Error when trying to reset password", error });
+        res.status(500).json({
+            message: "Error checking authentication status",
+            error,
+        });
     }
 });
-exports.default = { Login, Logout, ResetPassword };
+exports.default = { Login, Logout, authCheck };

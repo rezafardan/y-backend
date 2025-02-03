@@ -9,6 +9,7 @@ const user_controller_1 = __importDefault(require("../controllers/user.controlle
 // MIDDLEWARE
 const authorizeRole_middleware_1 = require("../middlewares/authorizeRole.middleware");
 const upload_middleware_1 = require("../middlewares/upload.middleware");
+const imageCompression_middleware_1 = __importDefault(require("../middlewares/imageCompression.middleware"));
 // THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express_1.default.Router();
 // CHECK USER DATA BUT ONLY DATA USER LOGGED IN
@@ -16,11 +17,11 @@ const router = express_1.default.Router();
 router.get("/me", user_controller_1.default.getLoggedInUser);
 // UPDATE USER DATA BUT ONLY DATA USER LOGGED IN
 //   http://hostname/api/user/me
-router.patch("/me", upload_middleware_1.uploadProfile.single("profileImage"), user_controller_1.default.updateLoggedInUser);
+router.patch("/me", upload_middleware_1.uploadProfile.single("profileImage"), (0, imageCompression_middleware_1.default)("profile-image"), user_controller_1.default.updateLoggedInUser);
 // CREATE A NEW USER
 //   POST MULTIPART/FORM-DATA
 //   http://hostname/api/user
-router.post("/", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), upload_middleware_1.uploadProfile.single("profileImage"), user_controller_1.default.createNewUser);
+router.post("/", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), upload_middleware_1.uploadProfile.single("profileImage"), (0, imageCompression_middleware_1.default)("profile-image"), user_controller_1.default.createNewUser);
 // READ ALL USER DATA
 //   http://hostname/api/user
 router.get("/", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), user_controller_1.default.getAllUsers);
@@ -29,11 +30,7 @@ router.get("/", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"])
 router.get("/:id", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), user_controller_1.default.getUserById);
 // UPDATE USER DATA BY ID
 //   http://hostname/api/user/ID?
-router.patch("/:id", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), (req, res, next) => {
-    console.log("File:", req.file); // Cek file yang diterima
-    console.log("Body:", req.body); // Cek data lainnya
-    next();
-}, upload_middleware_1.uploadProfile.single("profileImage"), user_controller_1.default.updateUser);
+router.patch("/:id", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), upload_middleware_1.uploadProfile.single("profileImage"), user_controller_1.default.updateUser);
 // SOFT DELETE USER DATA BY ID
 //   http://hostname/api/user/ID?
 router.patch("/softdelete/:id", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), user_controller_1.default.softDeleteUser);

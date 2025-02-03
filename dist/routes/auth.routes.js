@@ -4,14 +4,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+// CONTROLLER
 const auth_controller_1 = __importDefault(require("../controllers/auth.controller"));
-const authorizeRole_middleware_1 = require("../middlewares/authorizeRole.middleware");
+// MIDDLEWARE
 const accessValidation_midlleware_1 = __importDefault(require("../middlewares/accessValidation.midlleware"));
+// THIS FILE CONFIGURE ROUTES FOR USER SERVICE ENDPOINT
 const router = express_1.default.Router();
 // LOGIN
+//   http://hostname/api/login
 router.post("/login", auth_controller_1.default.Login);
 // lOGOUT
+//   http://hostname/api/logout
 router.post("/logout", accessValidation_midlleware_1.default, auth_controller_1.default.Logout);
-// RESET PASSWORD
-router.post("/reset-password", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR"]), auth_controller_1.default.ResetPassword);
+// AUTHENTICATION CHECK
+//   http://hostname/api/auth/check
+router.get("/auth/check", auth_controller_1.default.authCheck);
 exports.default = router;

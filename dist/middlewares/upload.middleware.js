@@ -16,7 +16,6 @@ const createStorage = (folder) => {
             const randomId = crypto_1.default.randomBytes(16).toString("hex");
             const fileExtension = path_1.default.extname(file.originalname);
             const fileName = `${randomId}${fileExtension}`;
-            console.log(file);
             callback(null, fileName);
         },
     });

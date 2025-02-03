@@ -12,23 +12,108 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const bcrypt_1 = __importDefault(require("bcrypt"));
-const fs_1 = __importDefault(require("fs"));
 // ORM
 const prisma_1 = __importDefault(require("../models/prisma"));
-// CREATE
+const bcrypt_1 = __importDefault(require("bcrypt"));
+// FILE SYSTEM
+const fs_1 = __importDefault(require("fs"));
+//  GET USER DATA THAT LOGGED IN FOR VIEW USER PROFILE ACTION
+const getLoggedInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // GET USER ID
+        const userId = req.user.id;
+        if (!userId) {
+            return res.status(400).json({ message: "User not found" });
+        }
+        // DATABASE CONNECTION WITH ORM
+        const user = yield prisma_1.default.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                username: true,
+                fullname: true,
+                email: true,
+                profileImage: true,
+                role: true,
+            },
+        });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        return res
+            .status(200)
+            .json({ data: user, message: "Get data user logged in success!" });
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal server error", error });
+    }
+});
+// PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
+const updateLoggedInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // GET USER ID
+        const userId = req.user.id;
+        if (!userId) {
+            return res.status(400).json({ message: "User not found" });
+        }
+        // GET BODY
+        const { fullname, email, password, role } = req.body;
+        const profileImage = req.file;
+        const existingUser = yield prisma_1.default.user.findUnique({
+            where: { id: userId },
+        });
+        if (!existingUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // NEW DATA AND EXISTING DATA
+        const updatedData = {
+            fullname: fullname || existingUser.fullname,
+            email: email || existingUser.email,
+            role: role || existingUser.role,
+            profileImage: (profileImage === null || profileImage === void 0 ? void 0 : profileImage.path) || existingUser.profileImage,
+        };
+        // NEW PASSWORD CREATE HASHING
+        if (password) {
+            const salt = yield bcrypt_1.default.genSalt(10);
+            updatedData.passwordHash = yield bcrypt_1.default.hash(password, salt);
+        }
+        // DELETE PROFILE IMAGE IF THERE ARE PROFILE IMAGE IN DATABASE
+        if (profileImage && existingUser.profileImage) {
+            try {
+                yield fs_1.default.promises.unlink(existingUser.profileImage);
+            }
+            catch (error) {
+                return res
+                    .status(500)
+                    .json({ message: "Error deleting profile image", error });
+            }
+        }
+        // DATABASE CONNECTION WITH ORM
+        const result = yield prisma_1.default.user.update({
+            where: { id: userId },
+            data: updatedData,
+        });
+        res
+            .status(200)
+            .json({ data: result, message: "User profile updated successfully!" });
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal server error", error });
+    }
+});
+// CREATE NEW USER
 const createNewUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // GET BODY
         const { username, fullname, email, password, role } = req.body;
         const profileImage = req.file;
-        // DATABASE CONNECTION WITH ORM
+        // CHECK DUPLICATE EMAIL
         const emailValidation = yield prisma_1.default.user.findUnique({
             where: { email },
         });
         if (emailValidation) {
             return res.status(500).json({
-                message: "Error creating user, email alredy exist, please change your email",
+                message: "Error creating user, email alredy exist, please change your email!",
             });
         }
         // HASHING PASSWORD
@@ -48,10 +133,9 @@ const createNewUser = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         return res
             .status(201)
-            .json({ data: result, message: "Create a user success" });
+            .json({ data: result, message: "Create a user success!" });
     }
     catch (error) {
-        console.log(error);
         return res.status(500).json({ message: "Error creating user", error });
     }
 });
@@ -75,7 +159,7 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.status(200).json({ data: result, messsage: "Get all users success!" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error when get users data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 //  GET USER DATA BY ID
@@ -83,7 +167,6 @@ const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         // GET ID
         const { id } = req.params;
-        console.log(id);
         // DATABASE CONNECTION WITH ORM
         const result = yield prisma_1.default.user.findUnique({
             where: { id },
@@ -101,10 +184,10 @@ const getUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         });
         res
             .status(200)
-            .json({ data: result, message: `Get user by id: ${id} success` });
+            .json({ data: result, message: `Get user by id: ${id} success!` });
     }
     catch (error) {
-        res.status(500).json({ message: "Error when get user data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 // UPDATE USER DATA BY ID
@@ -124,12 +207,23 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             email: email || existingUser.email,
             role: role || existingUser.role,
             profileImage: (profileImage === null || profileImage === void 0 ? void 0 : profileImage.path) || existingUser.profileImage,
-            passwordHash: existingUser.passwordHash, // Default old password
+            passwordHash: existingUser.passwordHash,
         };
         // HASHING PASSWORD
         if (password) {
             const salt = yield bcrypt_1.default.genSalt(10);
             updatedData.passwordHash = yield bcrypt_1.default.hash(password, salt);
+        }
+        // DELETE PROFILE IMAGE IF THERE ARE PROFILE IMAGE IN DATABASE
+        if (profileImage && existingUser.profileImage) {
+            try {
+                yield fs_1.default.promises.unlink(existingUser.profileImage);
+            }
+            catch (error) {
+                return res
+                    .status(500)
+                    .json({ message: "Error deleting profile image", error });
+            }
         }
         // DATABASE CONNECTION WITH ORM
         const result = yield prisma_1.default.user.update({
@@ -141,8 +235,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             .json({ data: result, message: "Updating user data success!" });
     }
     catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Error updating user data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 //  SOFT DELETE USER DATA
@@ -171,9 +264,7 @@ const softDeleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function*
         });
     }
     catch (error) {
-        res
-            .status(500)
-            .json({ message: "Error when soft deleting user data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 //  RESTORE USER DATA WHEN STATUS SOFT DELETE
@@ -202,7 +293,7 @@ const restoreUserSoftDelete = (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
     }
     catch (error) {
-        res.status(500).json({ message: "Error when restoring user data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 //  PERMANTENT DELETE USER DATA
@@ -239,7 +330,7 @@ const deleteUserPermanent = (req, res) => __awaiter(void 0, void 0, void 0, func
             .json({ data: result, message: "Deleting user data success!" });
     }
     catch (error) {
-        res.status(500).json({ message: "Error deleting user data", error });
+        res.status(500).json({ message: "Internal server error", error });
     }
 });
 // CHECK USERNAME FOR CREATE A NEW USER TO AVOID DUPLICATE USER DATA
@@ -260,82 +351,9 @@ const checkUsername = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return res.status(500).json({ isAvailable: false });
     }
 });
-//  GET USER DATA THAT LOGGED IN FOR VIEW  USER PROFILE ACTION
-const getLoggedInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        // Ambil id dari req.user yang telah diverifikasi oleh accessValidation
-        const userId = req.user.id;
-        if (!userId) {
-            return res.status(400).json({ message: "User not found" });
-        }
-        // DATABASE CONNECTION WITH ORM
-        const user = yield prisma_1.default.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                username: true,
-                fullname: true,
-                email: true,
-                profileImage: true,
-                role: true,
-            },
-        });
-        // Jika user tidak ditemukan
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        // Kirim response dengan data user
-        return res
-            .status(200)
-            .json({ data: user, message: "Get data user logged in success!" });
-    }
-    catch (error) {
-        console.error("Error getting user:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-});
-// PATCH USER DATA THAT LOGGED IN FOR EDIT USER PROFILE ACTION
-const updateLoggedInUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userId = req.user.id;
-        if (!userId) {
-            return res.status(400).json({ message: "User not found" });
-        }
-        const { fullname, email, password, role } = req.body;
-        const profileImage = req.file;
-        // Mendapatkan data user yang ada
-        const existingUser = yield prisma_1.default.user.findUnique({
-            where: { id: userId },
-        });
-        if (!existingUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const updatedData = {
-            fullname: fullname || existingUser.fullname,
-            email: email || existingUser.email,
-            role: role || existingUser.role,
-            profileImage: (profileImage === null || profileImage === void 0 ? void 0 : profileImage.path) || existingUser.profileImage,
-        };
-        // Jika password ada, hash password baru
-        if (password) {
-            const salt = yield bcrypt_1.default.genSalt(10);
-            updatedData.passwordHash = yield bcrypt_1.default.hash(password, salt);
-        }
-        // Update user di database
-        const result = yield prisma_1.default.user.update({
-            where: { id: userId },
-            data: updatedData,
-        });
-        res
-            .status(200)
-            .json({ data: result, message: "User profile updated successfully!" });
-    }
-    catch (error) {
-        console.error("Error updating user:", error);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-});
 exports.default = {
+    getLoggedInUser,
+    updateLoggedInUser,
     createNewUser,
     getAllUsers,
     getUserById,
@@ -344,6 +362,4 @@ exports.default = {
     deleteUserPermanent,
     restoreUserSoftDelete,
     checkUsername,
-    getLoggedInUser,
-    updateLoggedInUser,
 };

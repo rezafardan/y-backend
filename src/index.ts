@@ -70,7 +70,7 @@ app.use("/api/tag", accessValidation, tagRoutes);
 app.use("/api/category", accessValidation, categoryRoutes);
 
 // ROUTE BLOG
-app.use("/api/blog", accessValidation, blogRoutes);
+app.use("/api/blog", blogRoutes); // accessValidation
 
 // =============================== //
 // CREATE ADMINISTRATOR USER
@@ -81,13 +81,13 @@ app.use("/api/administrator", administratorRoutes);
 // =============================== //
 // ONLY USE ON DEVELOPMENT MODE
 // DISABLE IF DEPLOY TO PRODUCTION
-// const PORT = "4000";
-// app.listen(PORT, () => {
-//   console.log(`Server running in PORT: ${PORT}`);
-// });
+const PORT = "4000";
+app.listen(PORT, () => {
+  console.log(`Server running in PORT: ${PORT}`);
+});
 // =============================== //
 
 // MIDDLEWARE LOG ERROR
 app.use(logError);
 
-export default app;
+// export default app;

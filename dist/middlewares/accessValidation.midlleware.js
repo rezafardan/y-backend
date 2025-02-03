@@ -11,7 +11,9 @@ const accessValidation = (req, res, next) => {
     // GET HTTP COOKIES
     const accessToken = (_a = req.cookies) === null || _a === void 0 ? void 0 : _a.accessToken;
     if (!accessToken) {
-        res.status(401).json({ message: "Authentication token is missing" });
+        res
+            .status(401)
+            .json({ redirect: "/login", message: "Authentication token is missing" });
         return;
     }
     try {
@@ -26,7 +28,7 @@ const accessValidation = (req, res, next) => {
         next();
     }
     catch (error) {
-        res.status(403).json({ message: "Invalid token" });
+        res.status(403).json({ redirect: "/login", message: "Invalid token" });
         return;
     }
 };

@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vercel dev",
     "build": "tsc",
-    "start": "tsc && node dist/index.js",
+    "start": "tsc && nodemon dist/index.js",
     "postinstall": "prisma generate --schema src/models"
   },
   "keywords": [],
