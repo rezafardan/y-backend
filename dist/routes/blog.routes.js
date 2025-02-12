@@ -24,9 +24,7 @@ router.post("/contentimage", (0, authorizeRole_middleware_1.authorizeRole)(["ADM
 router.post("/coverimage", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR", "EDITOR", "AUTHOR"]), upload_middleware_1.uploadCover.single("coverimage"), (0, imageCompression_middleware_1.default)("blog"), blog_controller_1.default.uploadBlogImage);
 // READ ALL BLOG DATA
 //   http://hostname/api/blog
-router.get("/", 
-// authorizeRole(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]),
-blog_controller_1.default.getAllBlogs);
+router.get("/", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]), blog_controller_1.default.getAllBlogs);
 // READ BLOG DATA BY ID
 //   http://hostname/api/blog/ID?
 router.get("/:id", (0, authorizeRole_middleware_1.authorizeRole)(["ADMINISTRATOR", "EDITOR", "AUTHOR", "SUBSCRIBER"]), blog_controller_1.default.getBlogById);

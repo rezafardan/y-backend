@@ -52,7 +52,7 @@ app.use("/api/tag", accessValidation_midlleware_1.default, tag_routes_1.default)
 // ROUTE CATEGORY
 app.use("/api/category", accessValidation_midlleware_1.default, category_routes_1.default);
 // ROUTE BLOG
-app.use("/api/blog", blog_routes_1.default);
+app.use("/api/blog", blog_routes_1.default); // accessValidation
 // =============================== //
 // CREATE ADMINISTRATOR USER
 // COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
