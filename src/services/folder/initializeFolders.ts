@@ -7,7 +7,7 @@ const createFolderIfNotExists = (folder: string) => {
   }
 };
 
-// Jalankan fungsi saat server start
+// RUN FUNCTION ON START SERVER DEPLOY
 const initializeFolders = () => {
   const folders = [
     "public/assets/blog",
