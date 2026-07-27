@@ -37,11 +37,14 @@ jobs:
           # "backend.Dockerfile" (lihat file itu langsung di root y-backend).
           file: ./backend.Dockerfile
           push: true # langsung push ke registry kalau build sukses
+          # 2 tag sekaligus: "latest" (yang dipakai docker-compose.yml di server)
+          # dan tag per-commit (SHA) supaya ada jejak riwayat image / bisa rollback.
+          # PENTING: jangan taruh komentar di DALAM blok "tags: |" di bawah — baris
+          # apa pun di situ (termasuk yang diawali #) dianggap literal nama tag oleh
+          # Docker, bukan komentar (ini persis bug yang bikin build gagal kemarin).
           tags: |
             ghcr.io/${{ github.repository_owner }}/y-backend:latest
             ghcr.io/${{ github.repository_owner }}/y-backend:${{ github.sha }}
-            # 2 tag sekaligus: "latest" (yang dipakai docker-compose.yml di server)
-            # dan tag per-commit (SHA) supaya ada jejak riwayat image / bisa rollback.
 
       # Kalau build+push di atas sukses, kabari repo neuvarixal-deploy supaya
       # menjalankan workflow deploy.yml di sana (lihat "repository_dispatch" di
