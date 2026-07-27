@@ -1,0 +1,58 @@
+# Nama workflow ini — muncul di tab "Actions" repo GitHub.
+name: build-and-push
+
+# Kapan workflow ini otomatis jalan.
+on:
+  push:
+    branches: [main]  # tiap ada push/merge ke branch main
+  workflow_dispatch:   # atau dipicu manual lewat tombol "Run workflow" di tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # runner (mesin) Ubuntu bawaan GitHub buat jalanin job ini
+    permissions:
+      contents: read    # cukup baca isi repo (buat actions/checkout)
+      packages: write   # WAJIB "write" — supaya diizinkan push image ke GHCR
+    steps:
+      # Ambil (clone) source code repo ini ke dalam runner.
+      - uses: actions/checkout@v4
+
+      # Login ke registry dulu, supaya step push di bawah diizinkan.
+      - uses: docker/login-action@v3
+        with:
+          # BUG FIX: baris "registry: ghcr.io" ini sebelumnya TIDAK ADA. Tanpa ini,
+          # docker/login-action login ke Docker Hub (default-nya), bukan ke GHCR —
+          # padahal image di bawah di-push ke ghcr.io. Push pasti gagal "denied"
+          # kalau baris ini tidak ada.
+          registry: ghcr.io
+          username: ${{ github.actor }}         # akun GitHub yang men-trigger workflow ini
+          password: ${{ secrets.GITHUB_TOKEN }} # token bawaan GitHub Actions, otomatis ada, tidak perlu dibuat sendiri
+
+      # Build image dari Dockerfile, lalu push ke GHCR.
+      - uses: docker/build-push-action@v6
+        with:
+          context: . # build context = root repo ini (folder y-backend)
+          # BUG FIX: sebelumnya "./backend/Dockerfile" (folder "backend/" tidak ada
+          # di repo ini). Dockerfile aslinya ada di ROOT repo, namanya
+          # "backend.Dockerfile" (lihat file itu langsung di root y-backend).
+          file: ./backend.Dockerfile
+          push: true # langsung push ke registry kalau build sukses
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/y-backend:latest
+            ghcr.io/${{ github.repository_owner }}/y-backend:${{ github.sha }}
+            # 2 tag sekaligus: "latest" (yang dipakai docker-compose.yml di server)
+            # dan tag per-commit (SHA) supaya ada jejak riwayat image / bisa rollback.
+
+      # Kalau build+push di atas sukses, kabari repo neuvarixal-deploy supaya
+      # menjalankan workflow deploy.yml di sana (lihat "repository_dispatch" di
+      # file itu) — ini yang bikin server otomatis pull image terbaru & restart.
+      - name: Trigger deploy
+        run: |
+          curl -X POST \
+              -H "Authorization: token ${{ secrets.DEPLOY_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository_owner }}/neuvarixal-deploy/dispatches \
+              -d '{"event_type":"deploy"}'
+          # DEPLOY_TOKEN = Personal Access Token (bukan GITHUB_TOKEN bawaan), karena
+          # GITHUB_TOKEN cuma berlaku untuk repo ini sendiri — tidak bisa dipakai
+          # untuk memicu workflow di repo LAIN (neuvarixal-deploy).

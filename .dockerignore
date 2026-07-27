@@ -1,0 +1,13 @@
+# KEAMANAN CI/CD: file ini menentukan apa yang ikut terkirim ke Docker build
+# context. "node_modules" WAJIB tetap di-ignore agar tidak menimpa hasil pnpm
+# install di dalam container dengan node_modules host (beda OS/arsitektur).
+# "dist" WAJIB tetap di-ignore agar backend.Dockerfile selalu compile ulang
+# TypeScript yang terbaru (`npx tsc`), bukan memakai build lama yang mungkin
+# sudah basi/tidak lengkap. ".env" di-ignore juga sebagai jaga-jaga supaya
+# secret tidak pernah ikut ter-COPY ke image kalau suatu saat file itu dibuat
+# di folder ini.
+node_modules
+.git
+logs
+dist
+.env

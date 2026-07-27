@@ -5,6 +5,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
+// MODE DEPLOY (production / local) — lihat src/config/deployMode.ts
+import { isProductionMode } from "../config/deployMode";
+
 const Login = async (req: Request, res: Response): Promise<any> => {
   try {
     // GET BODY
@@ -73,10 +76,14 @@ const Login = async (req: Request, res: Response): Promise<any> => {
     );
 
     // SEND RESPONSE HTTP COOKIES FOR TOKEN VALIDATION
+    // Secure+SameSite=None HANYA dipakai di mode production (di belakang
+    // HTTPS/Caddy) — kalau dipaksa aktif saat testing lokal (HTTP biasa),
+    // browser akan menolak simpan cookie ini dan login akan gagal diam-diam.
+    // Mode local pakai Lax+non-secure supaya tetap jalan di http://localhost.
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Only true for production (HTTPS)
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // "None" for cross-site cookies, "Lax" for same-site
+      secure: isProductionMode,
+      sameSite: isProductionMode ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 1 day (in milliseconds)
     });
 
@@ -99,11 +106,12 @@ const Login = async (req: Request, res: Response): Promise<any> => {
 
 const Logout = async (req: Request, res: Response): Promise<any> => {
   try {
-    // Clear cookies
+    // Clear cookies — atributnya harus sama persis dengan saat di-set (Login)
+    // di atas, kalau tidak, browser tidak akan menganggapnya cookie yang sama.
     res.clearCookie("accessToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: isProductionMode,
+      sameSite: isProductionMode ? "none" : "lax",
     });
 
     return res.status(200).json({ message: "Logout successfully" });

@@ -16,6 +16,10 @@
 # /public/assets/profile-image/*
 # !/public/assets/profile-image/.gitkeep
 
+# KEAMANAN CI/CD: jangan pernah hapus ".env" di bawah — itu satu-satunya
+# proteksi supaya DATABASE_URL, ACCESS_TOKEN_SECRET, dll tidak ikut ter-commit.
+# "dist" juga wajib tetap di-ignore: image Docker meng-compile ulang lewat
+# `npx tsc` di build stage, bukan memakai folder dist lokal yang bisa basi.
 # General ignores
 node_modules
 .env

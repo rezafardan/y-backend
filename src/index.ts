@@ -24,17 +24,35 @@ import administratorRoutes from "./routes/administrator.routes";
 // ENV
 import dotenv from "dotenv";
 
+// MODE DEPLOY (production / local) — lihat src/config/deployMode.ts
+import { DEPLOY_MODE, LOCAL_DEV_ORIGINS } from "./config/deployMode";
+
 const app = express();
 dotenv.config();
 
 // ONLY DISABLE ON VERCEL PRODUCTION
 // CREATE NEW FOLDERS FOR ASSETS
-// initializeFolders();
+initializeFolders();
+
+
+// ALLOWED ORIGINS
+// FRONTEND_URL berisi domain asli dashboard & blog (dipisah koma).
+const allowedOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+// MODE LOCAL: tambahkan origin default docker-compose lokal (dashboard di
+// :3001, blog di :3002) supaya CORS tidak memblokir testing di laptop.
+// Tidak pernah aktif di mode production.
+if (DEPLOY_MODE === "local") {
+  allowedOrigins.push(...LOCAL_DEV_ORIGINS);
+}
 
 // MIDDLEWARE CROSS ORIGIN
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -55,6 +73,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 // MIDDLEWARE ACCESS ASSET FILES
+app.use("/public/assets/blog", express.static(path.resolve("public/assets/blog")));
+
+// MIDDLEWARE ACCESS ASSET FILES
 app.use("/public", accessValidation, express.static(path.resolve("public")));
 
 // ROUTE LOGIN
@@ -70,12 +91,24 @@ app.use("/api/tag", accessValidation, tagRoutes);
 app.use("/api/category", accessValidation, categoryRoutes);
 
 // ROUTE BLOG
-app.use("/api/blog", blogRoutes); // accessValidation
+// BUG SEBELUMNYA: accessValidation tidak dipasang di sini (cuma jadi
+// komentar), padahal semua route di blog.routes.ts pakai authorizeRole() yang
+// BUTUH req.user — dan req.user cuma diisi oleh accessValidation. Akibatnya
+// endpoint blog SELALU balas 403 "Access denied. User not authenticated"
+// untuk siapa pun, bahkan yang sudah login. Di dashboard, 403 tanpa field
+// `redirect` bikin axiosInstance langsung lempar ke /login (lihat
+// lib/axiosInstance.ts) — makanya menu blog (dan menu lain yang manggil
+// endpoint ini) kelihatannya "nyasar" ke halaman login terus.
+app.use("/api/blog", accessValidation, blogRoutes);
 
 // =============================== //
 // CREATE ADMINISTRATOR USER
-// COMMAND IF ADMINISTRATOR USER SUCCESSFULLY CREATED
-app.use("/api/administrator", administratorRoutes);
+// KEAMANAN: route ini dulu tidak pakai accessValidation sama sekali, artinya
+// SIAPA PUN bisa bikin akun ADMINISTRATOR baru tanpa login. Sekarang sudah
+// ada seed admin default (lihat src/scripts/seedAdmin.ts) untuk bootstrap
+// awal, jadi route ini wajib dikunci: harus login (accessValidation) DAN
+// role-nya ADMINISTRATOR (dicek lagi di administrator.routes.ts).
+app.use("/api/administrator", accessValidation, administratorRoutes);
 // =============================== //
 
 // =============================== //
