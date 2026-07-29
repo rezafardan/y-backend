@@ -91,15 +91,11 @@ app.use("/api/tag", accessValidation, tagRoutes);
 app.use("/api/category", accessValidation, categoryRoutes);
 
 // ROUTE BLOG
-// BUG SEBELUMNYA: accessValidation tidak dipasang di sini (cuma jadi
-// komentar), padahal semua route di blog.routes.ts pakai authorizeRole() yang
-// BUTUH req.user — dan req.user cuma diisi oleh accessValidation. Akibatnya
-// endpoint blog SELALU balas 403 "Access denied. User not authenticated"
-// untuk siapa pun, bahkan yang sudah login. Di dashboard, 403 tanpa field
-// `redirect` bikin axiosInstance langsung lempar ke /login (lihat
-// lib/axiosInstance.ts) — makanya menu blog (dan menu lain yang manggil
-// endpoint ini) kelihatannya "nyasar" ke halaman login terus.
-app.use("/api/blog", accessValidation, blogRoutes);
+// TIDAK pakai accessValidation blanket di sini (beda dari /api/user, /api/tag,
+// /api/category) — GET blog harus bisa diakses situs blog publik (y-blogpage)
+// yang tidak pernah login. Setiap route TULIS di blog.routes.ts sudah pasang
+// accessValidation + authorizeRole sendiri; GET dibiarkan publik di sana.
+app.use("/api/blog", blogRoutes);
 
 // =============================== //
 // CREATE ADMINISTRATOR USER
