@@ -153,43 +153,59 @@ const createNewBlog = async (req: Request, res: Response): Promise<any> => {
 };
 
 // GET ALL BLOG DATA
+// PAGINATION: opsional lewat query "?limit=&offset=" (dipakai lazy
+// loading/infinite scroll di y-blogpage). Kalau tidak dikirim sama sekali,
+// tetap balikin SEMUA blog seperti sebelumnya — dashboard (tabel list blog,
+// chart) masih mengandalkan perilaku lama ini, jangan diubah jadi wajib
+// paginated supaya tidak merusak konsumen yang sudah ada.
 const getAllBlogs = async (req: Request, res: Response): Promise<any> => {
   try {
-    const result = await prisma.blog.findMany({
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        coverImageId: true,
-        coverImage: { select: { filepath: true } },
-        content: true,
-        category: true,
-        tags: true,
-        status: true,
-        publishedAt: true,
-        allowComment: true,
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
 
-        likeCount: true,
-        viewCount: true,
+    const [result, total] = await Promise.all([
+      prisma.blog.findMany({
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          coverImageId: true,
+          coverImage: { select: { filepath: true } },
+          content: true,
+          category: true,
+          tags: true,
+          status: true,
+          publishedAt: true,
+          allowComment: true,
 
-        createdAt: true,
-        updatedAt: true,
-        isUserActive: true,
+          likeCount: true,
+          viewCount: true,
 
-        user: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-            deletedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          isUserActive: true,
+
+          user: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+              deletedAt: true,
+            },
           },
         },
-      },
-    });
+        // Urutan tetap (terbaru dulu) supaya halaman ke-2, ke-3, dst tidak
+        // tumpang tindih/kelewatan data saat di-load bertahap.
+        orderBy: { publishedAt: "desc" },
+        ...(limit ? { take: limit } : {}),
+        ...(offset ? { skip: offset } : {}),
+      }),
+      prisma.blog.count(),
+    ]);
 
     return res
       .status(200)
-      .json({ data: result, message: "Get all blogs success!" });
+      .json({ data: result, total, message: "Get all blogs success!" });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error.", error });
   }
